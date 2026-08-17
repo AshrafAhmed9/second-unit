@@ -1,0 +1,22 @@
+[
+  {
+    "shot_id": "sh0420",
+    "sequence": "seq042",
+    "job_ids": ["job-seq042-sh0420"],
+    "frames_total": 240,
+    "frames_done": 180,
+    "render_minutes_per_frame": 6.5,
+    "due_at": "2026-08-18T09:00:00",
+    "client_review": true
+  },
+  {
+    "shot_id": "sh0110",
+    "sequence": "seq011",
+    "job_ids": ["job-seq011-sh0110"],
+    "frames_total": 96,
+    "frames_done": 96,
+    "render_minutes_per_frame": 4.0,
+    "due_at": "2026-08-19T09:00:00",
+    "client_review": false
+  }
+]

@@ -1,0 +1,14 @@
+# Real fault: Cycles sample count dropped to 2. The render finishes, exit
+# code 0, normal duration — every metric stays green. The output frame has
+# genuine denoiser fireflies/noise. This is the demo's core "green metrics,
+# broken art" moment and it must be produced this way, not faked in post.
+name: low_samples
+kind: render_flag
+description: >
+  Applied via --python-expr in render_worker.build_blender_command:
+  bpy.context.scene.cycles.samples = 2
+expected_signal:
+  metrics: green (job succeeds, normal duration)
+  logs: clean
+  traces: clean
+  visual: genuine noise/fireflies, detectable by EyesAgent

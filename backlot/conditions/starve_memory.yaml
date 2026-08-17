@@ -1,0 +1,15 @@
+# Real fault: the Cloud Run Job task's --memory flag is set below what the
+# frame's scene actually requires (a real high-poly/large-texture frame).
+# The kernel OOM-kills the Blender process for real; Cloud Run surfaces a
+# genuine exit code 137, which LogsAgent and MetricsAgent both see.
+name: starve_memory
+kind: container_level
+description: >
+  Applied in dispatch.py: launch the Cloud Run Jobs task with --memory 512Mi
+  against a frame whose working set is documented (in this file's sibling
+  fixture) to require >1.5Gi. Real OOM kill, real exit code 137.
+expected_signal:
+  metrics: real memory-saturation spike immediately before the kill
+  logs: real OOM line surfaced by the container runtime -> Loki
+  traces: a real span ending in an error status
+  visual: n/a (frame is never produced)

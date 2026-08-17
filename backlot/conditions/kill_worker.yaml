@@ -1,0 +1,15 @@
+# Real fault: dispatch.py SIGKILLs the render subprocess partway through a
+# frame on a Cloud Run Job task, then the job's retry policy reschedules it.
+# The retry and the orphaned/incomplete span are genuine, produced by an
+# actual process kill, not synthesized log lines.
+name: kill_worker
+kind: process_level
+description: >
+  Applied in dispatch.py: send SIGKILL to the blender subprocess at a random
+  point between 20-80% through the expected render duration for one frame.
+  Cloud Run Jobs task retry then re-attempts the frame.
+expected_signal:
+  metrics: a real gap/restart in the worker's up-time series
+  logs: clean (the log line simply stops mid-frame)
+  traces: a real incomplete span in Tempo, followed by a real retry span
+  visual: n/a (frame is never produced on the killed attempt)

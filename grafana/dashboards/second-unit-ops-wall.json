@@ -1,0 +1,65 @@
+{
+  "title": "SECOND UNIT — Render Farm Ops Wall",
+  "description": "Importable dashboard for the Grafana track submission. Install this into your own Grafana Cloud stack (Dashboards -> New -> Import -> upload this file) to see the backlot's real Prometheus/Loki/Tempo signal, plus the annotations and incidents SECOND UNIT writes back at runtime.",
+  "tags": ["second-unit", "agentic-cinema", "render-farm"],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "30s",
+  "time": { "from": "now-1h", "to": "now" },
+  "panels": [
+    {
+      "id": 1,
+      "title": "GPU utilization by worker pool",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "targets": [
+        { "expr": "avg by (pool) (backlot_worker_gpu_utilization_ratio)", "legendFormat": "{{pool}}" }
+      ],
+      "description": "This stays GREEN during a low_samples or break_texture condition — the job succeeds normally. That's the whole point: metrics alone cannot see these defects."
+    },
+    {
+      "id": 2,
+      "title": "Render job duration (p50/p95)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "targets": [
+        { "expr": "histogram_quantile(0.50, sum(rate(backlot_render_duration_seconds_bucket[5m])) by (le))", "legendFormat": "p50" },
+        { "expr": "histogram_quantile(0.95, sum(rate(backlot_render_duration_seconds_bucket[5m])) by (le))", "legendFormat": "p95" }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Renderer logs (Loki)",
+      "type": "logs",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "datasource": { "type": "loki", "uid": "${DS_LOKI}" },
+      "targets": [{ "expr": "{job=\"backlot-worker\"}" }]
+    },
+    {
+      "id": 4,
+      "title": "SECOND UNIT annotations & incidents (written back at runtime)",
+      "type": "annolist",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "options": { "tags": ["second-unit"], "limit": 20 },
+      "description": "Every annotation and incident here was created by ActuatorAgent after a human approved the plan — this panel is the write-back proof, not a claim."
+    },
+    {
+      "id": 5,
+      "title": "Agent reasoning traces (Tempo)",
+      "type": "traces",
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 16 },
+      "datasource": { "type": "tempo", "uid": "${DS_TEMPO}" },
+      "description": "second_unit.* spans — the agent graph's own execution, exported via OTel so it's debuggable the same way any other farm service is."
+    }
+  ],
+  "templating": {
+    "list": [
+      { "name": "DS_PROMETHEUS", "type": "datasource", "query": "prometheus" },
+      { "name": "DS_LOKI", "type": "datasource", "query": "loki" },
+      { "name": "DS_TEMPO", "type": "datasource", "query": "tempo" }
+    ]
+  }
+}

@@ -1,0 +1,14 @@
+# Real fault: every image datablock's filepath is repointed to a nonexistent
+# file before render. Blender logs a real "Cannot read image" to stderr and
+# renders with a pink/missing-texture material. Both the log line and the
+# visual defect are genuine renderer output.
+name: break_texture
+kind: render_flag
+description: >
+  Applied via --python-expr in render_worker.build_blender_command:
+  repoints every bpy.data.images entry to /nonexistent/broken_texture.png
+expected_signal:
+  metrics: green (job still exits 0)
+  logs: real "Cannot read image" / "Unable to open" lines in stderr -> Loki
+  traces: clean
+  visual: pink/missing texture, detectable by EyesAgent

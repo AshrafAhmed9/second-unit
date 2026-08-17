@@ -1,0 +1,182 @@
+[
+  {
+    "condition_id": "cond-000-clean",
+    "fault_type": "clean",
+    "has_visual_defect": false,
+    "metrics_would_alert": false
+  },
+  {
+    "condition_id": "cond-001-clean",
+    "fault_type": "clean",
+    "has_visual_defect": false,
+    "metrics_would_alert": false
+  },
+  {
+    "condition_id": "cond-002-break_texture",
+    "fault_type": "break_texture",
+    "has_visual_defect": true,
+    "metrics_would_alert": false
+  },
+  {
+    "condition_id": "cond-003-low_samples",
+    "fault_type": "low_samples",
+    "has_visual_defect": true,
+    "metrics_would_alert": false
+  },
+  {
+    "condition_id": "cond-004-low_samples",
+    "fault_type": "low_samples",
+    "has_visual_defect": true,
+    "metrics_would_alert": false
+  },
+  {
+    "condition_id": "cond-005-low_samples",
+    "fault_type": "low_samples",
+    "has_visual_defect": true,
+    "metrics_would_alert": false
+  },
+  {
+    "condition_id": "cond-006-clean",
+    "fault_type": "clean",
+    "has_visual_defect": false,
+    "metrics_would_alert": false
+  },
+  {
+    "condition_id": "cond-007-starve_memory",
+    "fault_type": "starve_memory",
+    "has_visual_defect": false,
+    "metrics_would_alert": true
+  },
+  {
+    "condition_id": "cond-008-clean",
+    "fault_type": "clean",
+    "has_visual_defect": false,
+    "metrics_would_alert": false
+  },
+  {
+    "condition_id": "cond-009-starve_memory",
+    "fault_type": "starve_memory",
+    "has_visual_defect": false,
+    "metrics_would_alert": true
+  },
+  {
+    "condition_id": "cond-010-kill_worker",
+    "fault_type": "kill_worker",
+    "has_visual_defect": false,
+    "metrics_would_alert": true
+  },
+  {
+    "condition_id": "cond-011-clean",
+    "fault_type": "clean",
+    "has_visual_defect": false,
+    "metrics_would_alert": false
+  },
+  {
+    "condition_id": "cond-012-clean",
+    "fault_type": "clean",
+    "has_visual_defect": false,
+    "metrics_would_alert": false
+  },
+  {
+    "condition_id": "cond-013-clean",
+    "fault_type": "clean",
+    "has_visual_defect": false,
+    "metrics_would_alert": false
+  },
+  {
+    "condition_id": "cond-014-low_samples",
+    "fault_type": "low_samples",
+    "has_visual_defect": true,
+    "metrics_would_alert": false
+  },
+  {
+    "condition_id": "cond-015-low_samples",
+    "fault_type": "low_samples",
+    "has_visual_defect": true,
+    "metrics_would_alert": false
+  },
+  {
+    "condition_id": "cond-016-starve_memory",
+    "fault_type": "starve_memory",
+    "has_visual_defect": false,
+    "metrics_would_alert": true
+  },
+  {
+    "condition_id": "cond-017-starve_memory",
+    "fault_type": "starve_memory",
+    "has_visual_defect": false,
+    "metrics_would_alert": true
+  },
+  {
+    "condition_id": "cond-018-clean",
+    "fault_type": "clean",
+    "has_visual_defect": false,
+    "metrics_would_alert": false
+  },
+  {
+    "condition_id": "cond-019-starve_memory",
+    "fault_type": "starve_memory",
+    "has_visual_defect": false,
+    "metrics_would_alert": true
+  },
+  {
+    "condition_id": "cond-020-low_samples",
+    "fault_type": "low_samples",
+    "has_visual_defect": true,
+    "metrics_would_alert": false
+  },
+  {
+    "condition_id": "cond-021-starve_memory",
+    "fault_type": "starve_memory",
+    "has_visual_defect": false,
+    "metrics_would_alert": true
+  },
+  {
+    "condition_id": "cond-022-kill_worker",
+    "fault_type": "kill_worker",
+    "has_visual_defect": false,
+    "metrics_would_alert": true
+  },
+  {
+    "condition_id": "cond-023-low_samples",
+    "fault_type": "low_samples",
+    "has_visual_defect": true,
+    "metrics_would_alert": false
+  },
+  {
+    "condition_id": "cond-024-kill_worker",
+    "fault_type": "kill_worker",
+    "has_visual_defect": false,
+    "metrics_would_alert": true
+  },
+  {
+    "condition_id": "cond-025-starve_memory",
+    "fault_type": "starve_memory",
+    "has_visual_defect": false,
+    "metrics_would_alert": true
+  },
+  {
+    "condition_id": "cond-026-break_texture",
+    "fault_type": "break_texture",
+    "has_visual_defect": true,
+    "metrics_would_alert": false
+  },
+  {
+    "condition_id": "cond-027-clean",
+    "fault_type": "clean",
+    "has_visual_defect": false,
+    "metrics_would_alert": false
+  },
+  {
+    "condition_id": "cond-028-low_samples",
+    "fault_type": "low_samples",
+    "has_visual_defect": true,
+    "metrics_would_alert": false
+  },
+  {
+    "condition_id": "cond-029-kill_worker",
+    "fault_type": "kill_worker",
+    "has_visual_defect": false,
+    "metrics_would_alert": true
+  }
+]

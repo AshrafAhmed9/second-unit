@@ -1,0 +1,27 @@
+{
+  "_NOTE": "PLACEHOLDER. Replace this file by actually running the pipeline (backlot dispatch --condition low_samples, then a real agent run) and capturing the real stage outputs. Ship the real recording before submission — see docs/DEMO.md step 'Capture Demo Mode'. Shape must match control-room/app/types.ts DemoRecording.",
+  "job_id": "job-seq042-sh0420",
+  "shot_id": "sh0420",
+  "sequence": "seq042",
+  "due_at": "2026-08-18T09:00:00Z",
+  "stages": [
+    { "stage": "TriageAgent", "content": "Highest risk job: job-seq042-sh0420 (seq042/sh0420) — closest deadline, backs tomorrow's client review." },
+    { "stage": "MetricsAgent", "content": "GPU utilization nominal, queue depth normal, no node churn. Metrics: green." },
+    { "stage": "LogsAgent", "content": "No errors, no retries in renderer stderr/stdout for this job. Clean." },
+    { "stage": "TraceAgent", "content": "All frame spans completed within expected duration. Clean." },
+    { "stage": "EyesAgent", "content": "Frames 1180-1194 show visible denoiser fireflies/noise — sample count appears far below production spec. This is a real defect, not stylistic." },
+    { "stage": "SkepticAgent", "content": "Claim is specific (named frame range, named defect type) and consistent across consecutive frames — not isolated grain. CONFIRMED." },
+    { "stage": "ImpactAgent", "content": "seq042/sh0420: 15 frame(s) must be re-rendered (1.63 GPU-hours, $3). Projected finish slips 2.1h past the 09:00 deadline (client review) — ~$1,785 overtime exposure." },
+    { "stage": "PlannerAgent", "content": "Re-render frames 1180-1194 on a clean node with production sample count restored. Root cause: a per-job Cycles override was applied to the wrong frame range." },
+    { "stage": "ActuatorAgent", "content": "(pending approval)" }
+  ],
+  "impact_headline": "seq042/sh0420: 15 frame(s) must be re-rendered (1.63 GPU-hours, $3). Projected finish slips 2.1h past the 09:00 deadline (client review) — ~$1,785 overtime exposure.",
+  "plan": "Re-render frames 1180-1194 on a clean node with production sample count restored. Root cause: a per-job Cycles override was applied to the wrong frame range.",
+  "actuator_result": "Annotation created on 'Render Farm Ops Wall' at frame timestamp, tagged job-seq042-sh0420. Incident INC-042 opened: 'sh0420 will miss 09:00 client review — denoiser defect, frames 1180-1194'. Activity note added summarizing the evidence chain.",
+  "scorecard": {
+    "detection_rate": 1.0,
+    "false_positive_rate": 0.0,
+    "baseline_detection_rate": 1.0,
+    "vision_only_catches": 10
+  }
+}
