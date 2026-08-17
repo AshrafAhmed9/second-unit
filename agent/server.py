@@ -13,13 +13,17 @@ from typing import AsyncIterator
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from google.genai import types
 from sse_starlette.sse import EventSourceResponse
 
-from google.adk.runners import InMemoryRunner
+from google.adk.artifacts import InMemoryArtifactService
+from google.adk.runners import Runner
+from google.adk.sessions import InMemorySessionService
 
 from second_unit.agent import act_agent, diagnose_agent
 
 DEMO_RECORDING_PATH = Path(__file__).parent / "demo_mode" / "recorded_run.json"
+APP_NAME = "second-unit"
 
 app = FastAPI(title="SECOND UNIT agent service")
 app.add_middleware(
@@ -30,8 +34,19 @@ app.add_middleware(
 )
 
 _pending_plans: dict[str, dict] = {}
-_diagnose_runner = InMemoryRunner(agent=diagnose_agent, app_name="second-unit")
-_act_runner = InMemoryRunner(agent=act_agent, app_name="second-unit")
+
+# Shared across both runners deliberately. Each phase used to get its own
+# InMemoryRunner, which silently creates its OWN isolated session store —
+# the approve step then couldn't find the diagnose step's session at all
+# (SessionNotFoundError). Found and fixed during the day-7 vertical slice test.
+_session_service = InMemorySessionService()
+_artifact_service = InMemoryArtifactService()
+_diagnose_runner = Runner(
+    agent=diagnose_agent, app_name=APP_NAME, session_service=_session_service, artifact_service=_artifact_service
+)
+_act_runner = Runner(
+    agent=act_agent, app_name=APP_NAME, session_service=_session_service, artifact_service=_artifact_service
+)
 
 
 @app.get("/healthz")
@@ -55,12 +70,16 @@ async def start_run(job_id: str | None = None):
     streamed back over SSE at /runs/{run_id}/events.
     """
     run_id = str(uuid.uuid4())
+    await _session_service.create_session(app_name=APP_NAME, user_id="control-room", session_id=run_id)
+
+    prompt = f"diagnose job {job_id}" if job_id else "triage and diagnose the highest-risk job now"
+    message = types.Content(role="user", parts=[types.Part.from_text(text=prompt)])
 
     async def event_stream() -> AsyncIterator[dict]:
         async for event in _diagnose_runner.run_async(
             user_id="control-room",
             session_id=run_id,
-            new_message=job_id or "triage and diagnose the highest-risk job now",
+            new_message=message,
         ):
             payload = {"stage": event.author, "content": str(event.content)}
             if event.is_final_response():
@@ -79,11 +98,13 @@ async def approve_run(run_id: str):
     if run_id not in _pending_plans:
         raise HTTPException(404, "no pending plan for this run_id")
 
+    message = types.Content(role="user", parts=[types.Part.from_text(text="approved, execute the plan")])
+
     async def event_stream() -> AsyncIterator[dict]:
         async for event in _act_runner.run_async(
             user_id="control-room",
             session_id=run_id,
-            new_message="execute the approved plan",
+            new_message=message,
         ):
             yield {"event": "stage", "data": json.dumps({"stage": event.author, "content": str(event.content)})}
         del _pending_plans[run_id]

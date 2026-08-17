@@ -13,6 +13,17 @@ MODEL = "gemini-2.5-flash"
 actuator_agent = LlmAgent(
     name="ActuatorAgent",
     model=MODEL,
+    # include_contents='none': ActuatorAgent must act ONLY on the templated
+    # state below, never on the full prior conversation. With the default
+    # ('default'), diagnose and act share one session (correctly, so state
+    # persists across the human approval gate) — but that also means this
+    # agent would otherwise see every evidence agent's back-and-forth,
+    # including unresolved investigative threads (e.g. MetricsAgent retrying
+    # a failed query). Observed once: given a generic "approved, execute"
+    # message, the model picked up MetricsAgent's unfinished Prometheus
+    # investigation instead of doing its own job, and called a tool it
+    # doesn't have. Found during the day-7 vertical slice test.
+    include_contents="none",
     instruction=(
         "A human has approved this plan: {{plan}}, for impact={{impact}} on "
         "job_id={{triaged_job_id}}. Using the Grafana annotation and incident "
@@ -21,7 +32,9 @@ actuator_agent = LlmAgent(
         "headline as the text; (2) open an incident if impact.misses_deadline "
         "is true, titled with the shot id and headline, and add one activity "
         "note summarizing the evidence chain (metrics/logs/traces/visual) that "
-        "led here. Report the annotation id and incident id you created."
+        "led here. Report the annotation id and incident id you created. Do not "
+        "attempt any tool outside annotations/incidents — you do not have "
+        "metrics, logs, or trace access, and should not need it."
     ),
     tools=[write_toolset()],
     output_key="actuator_result",

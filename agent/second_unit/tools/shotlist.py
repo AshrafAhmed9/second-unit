@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import json
 import os
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
 
@@ -22,6 +22,19 @@ def _load_fixture() -> list[dict]:
     return json.loads(FIXTURE_PATH.read_text())
 
 
+def _parse_due_at(value: str) -> datetime:
+    """Parse due_at as UTC-aware, always. The shotlist fixture (and the
+    Firestore rows seeded from it) store naive ISO strings like
+    "2026-08-18T09:00:00" with no offset; schedule.compute_impact compares
+    this against datetime.now(timezone.utc), which crashes on a naive/aware
+    mismatch (`can't subtract offset-naive and offset-aware datetimes`).
+    Found during the day-7 vertical slice test — fix at the parsing
+    boundary so every Shot.due_at is aware from the moment it's constructed.
+    """
+    parsed = datetime.fromisoformat(value)
+    return parsed if parsed.tzinfo is not None else parsed.replace(tzinfo=timezone.utc)
+
+
 def get_shot_for_job(job_id: str) -> Optional[Shot]:
     """Resolve a render-farm job id to the Shot it belongs to.
 
@@ -32,10 +45,12 @@ def get_shot_for_job(job_id: str) -> Optional[Shot]:
     if project:
         from google.cloud import firestore  # imported lazily so tests don't need the SDK configured
 
+        from google.cloud.firestore_v1.base_query import FieldFilter
+
         db = firestore.Client(project=project)
         docs = (
             db.collection("shots")
-            .where("job_ids", "array_contains", job_id)
+            .where(filter=FieldFilter("job_ids", "array_contains", job_id))
             .limit(1)
             .stream()
         )
@@ -47,7 +62,7 @@ def get_shot_for_job(job_id: str) -> Optional[Shot]:
                 frames_total=d["frames_total"],
                 frames_done=d["frames_done"],
                 render_minutes_per_frame=d["render_minutes_per_frame"],
-                due_at=datetime.fromisoformat(d["due_at"]),
+                due_at=_parse_due_at(d["due_at"]),
                 client_review=d.get("client_review", False),
             )
         return None
@@ -60,15 +75,32 @@ def get_shot_for_job(job_id: str) -> Optional[Shot]:
                 frames_total=d["frames_total"],
                 frames_done=d["frames_done"],
                 render_minutes_per_frame=d["render_minutes_per_frame"],
-                due_at=datetime.fromisoformat(d["due_at"]),
+                due_at=_parse_due_at(d["due_at"]),
                 client_review=d.get("client_review", False),
             )
     return None
 
 
 def list_active_jobs() -> list[str]:
-    """All job ids currently tracked, for TriageAgent to scan."""
+    """All job ids currently tracked, for TriageAgent to scan.
+
+    Must mirror get_shot_for_job's Firestore-vs-fixture branch exactly — an
+    earlier version always read the local fixture here regardless of
+    GOOGLE_CLOUD_PROJECT, so in a real deployment TriageAgent would list
+    fixture job ids that get_shot_for_job could never resolve against
+    Firestore, silently filtering out every candidate. Found during the
+    day-7 vertical slice test.
+    """
+    project = os.environ.get("GOOGLE_CLOUD_PROJECT")
     ids: list[str] = []
+    if project:
+        from google.cloud import firestore  # lazy import, see get_shot_for_job
+
+        db = firestore.Client(project=project)
+        for doc in db.collection("shots").stream():
+            ids.extend(doc.to_dict().get("job_ids", []))
+        return ids
+
     for d in _load_fixture():
         ids.extend(d["job_ids"])
     return ids
