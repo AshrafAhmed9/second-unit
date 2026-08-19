@@ -46,13 +46,24 @@ VISUAL_DEFECT_FAULTS = {"low_samples", "break_texture"}
 # parse. Documented here rather than hidden — see README "Path to production"
 # for the honest path to a stricter version (e.g. an output_schema on
 # EyesAgent/ReexamineAgent instead of a free-text field).
-_CLEAN_PHRASES = ("look clean", "looks clean", "genuinely clean", "no visual defect", "no defect")
+#
+# Detects DEFECT language directly rather than inferring a defect from the
+# absence of "clean" phrases. The absence-based version scored a real,
+# correct detection ("I have found visual artifacts... noticeable noise") as
+# NOT flagged, because the model's phrasing didn't happen to match any of
+# the specific "clean" strings being checked for — defect vocabulary is far
+# more consistent across responses than cleanliness vocabulary is. Found
+# scoring the first eval run after the loop-exit fix.
+_DEFECT_PHRASES = (
+    "defect", "artifact", "firefl", "noise", "noisy", "grain", "speckle",
+    "corrupt", "missing texture", "black frame", "blank frame", "pink texture",
+)
 
 
 def classify_visual_evidence(text: str) -> bool:
     """Return True if the agent's final visual_evidence claims a defect."""
     lowered = text.lower()
-    return not any(phrase in lowered for phrase in _CLEAN_PHRASES)
+    return any(phrase in lowered for phrase in _DEFECT_PHRASES)
 
 
 def generate_seed_plan(n: int, seed: int = 42) -> list[SeededCondition]:

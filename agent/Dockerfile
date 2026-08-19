@@ -1,8 +1,6 @@
-FROM python:3.12-slim
-
 # grafana/mcp-grafana ships as a Go binary; install it into the image so the
 # agent service can spawn it as a stdio subprocess (see second_unit/tools/grafana_mcp.py).
-FROM golang:1.22-bookworm AS mcp-grafana-build
+FROM golang:1.26-bookworm AS mcp-grafana-build
 RUN go install github.com/grafana/mcp-grafana/cmd/mcp-grafana@latest
 
 FROM python:3.12-slim

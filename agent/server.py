@@ -55,9 +55,17 @@ async def healthz():
 
 
 @app.get("/demo")
-async def demo_mode() -> AsyncIterator[dict]:
+async def demo_mode() -> dict:
     """Replay a real, previously-recorded run. No API calls, no cost, cannot
     break. This is the default landing experience — see control-room/.
+
+    Was typed -> AsyncIterator[dict], which crashed the app at import time:
+    FastAPI tries to build a Pydantic response model from the return
+    annotation, and AsyncIterator[dict] isn't a valid one — this function
+    was never actually a generator, just returns a plain dict. Found via
+    Cloud Run's real startup logs after the first deploy attempt failed the
+    container health check (it never even got to the Grafana/MCP-related
+    code this whole service exists for).
     """
     if not DEMO_RECORDING_PATH.exists():
         raise HTTPException(404, "no demo recording captured yet — see docs/DEMO.md")
