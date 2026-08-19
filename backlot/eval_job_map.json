@@ -1,0 +1,10 @@
+{
+  "eval-clean-000": "clean",
+  "eval-clean-001": "clean",
+  "eval-clean-002": "clean",
+  "eval-low_samples-003": "low_samples",
+  "eval-low_samples-004": "low_samples",
+  "eval-low_samples-005": "low_samples",
+  "eval-kill_worker-006": "kill_worker",
+  "eval-kill_worker-007": "kill_worker"
+}
