@@ -40,30 +40,19 @@ JOB_MAP_PATH = Path(__file__).resolve().parent.parent / "backlot" / "eval_job_ma
 FAULT_TYPES = ["clean", "low_samples", "break_texture", "kill_worker", "starve_memory"]
 VISUAL_DEFECT_FAULTS = {"low_samples", "break_texture"}
 
-# Loose keyword classifier over the agent's own free-text visual_evidence.
-# A real limitation, stated plainly: this is not a structured/schema'd
-# verdict, so it's a heuristic over natural language, not a guaranteed-exact
-# parse. Documented here rather than hidden — see README "Path to production"
-# for the honest path to a stricter version (e.g. an output_schema on
-# EyesAgent/ReexamineAgent instead of a free-text field).
-#
-# Detects DEFECT language directly rather than inferring a defect from the
-# absence of "clean" phrases. The absence-based version scored a real,
-# correct detection ("I have found visual artifacts... noticeable noise") as
-# NOT flagged, because the model's phrasing didn't happen to match any of
-# the specific "clean" strings being checked for — defect vocabulary is far
-# more consistent across responses than cleanliness vocabulary is. Found
-# scoring the first eval run after the loop-exit fix.
-_DEFECT_PHRASES = (
-    "defect", "artifact", "firefl", "noise", "noisy", "grain", "speckle",
-    "corrupt", "missing texture", "black frame", "blank frame", "pink texture",
-)
-
-
-def classify_visual_evidence(text: str) -> bool:
-    """Return True if the agent's final visual_evidence claims a defect."""
-    lowered = text.lower()
-    return any(phrase in lowered for phrase in _DEFECT_PHRASES)
+# Classification used to be a keyword heuristic directly over
+# visual_evidence text. Two versions were tried and both failed in opposite,
+# embarrassing ways: an absence-of-"clean"-phrases version scored a real
+# detection ("I have found visual artifacts... noise") as not flagged
+# because its exact wording didn't match; a presence-of-defect-words version
+# then scored a real negation ("There are no visual defects... clean") as
+# flagged, because "defect" matched regardless of the "no" in front of it.
+# That's not a tuning problem — prose parsing was the wrong tool for a
+# question with a real structured answer. Replaced with VerdictAgent
+# (second_unit/sub_agents/verdict.py), a small no-tools agent using ADK's
+# output_schema to produce an actual has_defect: bool. See that file's
+# docstring for why it's a separate agent rather than output_schema bolted
+# onto EyesAgent/ReexamineAgent directly.
 
 
 def generate_seed_plan(n: int, seed: int = 42) -> list[SeededCondition]:
@@ -126,9 +115,13 @@ async def _run_one_condition(condition: SeededCondition) -> DetectionResult:
     from google.genai import types
 
     from second_unit.sub_agents.evidence import build_evidence_agents
+    from second_unit.sub_agents.verdict import build_verdict_agent
     from second_unit.sub_agents.verify import build_verify_loop
 
-    detect_agent = SequentialAgent(name="EvalDetect", sub_agents=[build_evidence_agents(), build_verify_loop()])
+    detect_agent = SequentialAgent(
+        name="EvalDetect",
+        sub_agents=[build_evidence_agents(), build_verify_loop(), build_verdict_agent()],
+    )
     session_service = InMemorySessionService()
     artifact_service = InMemoryArtifactService()
     runner = Runner(
@@ -143,9 +136,12 @@ async def _run_one_condition(condition: SeededCondition) -> DetectionResult:
         pass
 
     final = await session_service.get_session(app_name="second-unit-eval", user_id="eval", session_id=session.id)
-    visual_evidence = final.state.get("visual_evidence", "")
-    agent_flagged = classify_visual_evidence(visual_evidence) if visual_evidence else False
-    print(f"    [{condition.condition_id}] flagged={agent_flagged} | visual_evidence: {visual_evidence[:200]!r}")
+    verdict = final.state.get("visual_verdict")
+    if verdict is None:
+        raise RuntimeError(f"VerdictAgent produced no output for {condition.condition_id}")
+    agent_flagged = verdict["has_defect"] if isinstance(verdict, dict) else verdict.has_defect
+    reasoning = verdict["reasoning"] if isinstance(verdict, dict) else verdict.reasoning
+    print(f"    [{condition.condition_id}] has_defect={agent_flagged} | {reasoning}")
 
     return DetectionResult(
         condition_id=condition.condition_id,

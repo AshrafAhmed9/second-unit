@@ -7,17 +7,24 @@ set -euo pipefail
 : "${REGION:=us-central1}"
 
 AGENT_URL="$(gcloud run services describe second-unit-agent --region "$REGION" --format 'value(status.url)')"
+IMAGE="gcr.io/${PROJECT_ID}/second-unit-control-room:latest"
 
+# NEXT_PUBLIC_* vars are inlined into the JS bundle at BUILD time, not read
+# at container runtime — `gcloud run deploy --set-env-vars` on the running
+# service would silently do nothing for it. Must go in as a Docker build-arg
+# instead, which needs an explicit cloudbuild.yaml step: plain
+# `gcloud builds submit --tag ... --substitutions` does NOT forward
+# substitutions into the build as --build-arg on its own. Found via review
+# before deploying, not after a wasted build cycle.
 gcloud builds submit ../control-room \
-  --tag "gcr.io/${PROJECT_ID}/second-unit-control-room:latest" \
-  --substitutions "_AGENT_URL=${AGENT_URL}"
+  --config ../control-room/cloudbuild.yaml \
+  --substitutions "_AGENT_URL=${AGENT_URL},_IMAGE=${IMAGE}"
 
 gcloud run deploy second-unit-control-room \
-  --image "gcr.io/${PROJECT_ID}/second-unit-control-room:latest" \
+  --image "$IMAGE" \
   --region "$REGION" \
   --allow-unauthenticated \
   --min-instances 0 \
-  --max-instances 3 \
-  --set-env-vars "NEXT_PUBLIC_AGENT_URL=${AGENT_URL}"
+  --max-instances 3
 
 echo "Control room deployed. This URL is what goes in the Devpost submission."

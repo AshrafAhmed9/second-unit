@@ -49,8 +49,14 @@ _act_runner = Runner(
 )
 
 
-@app.get("/healthz")
-async def healthz():
+@app.get("/status")
+async def status():
+    """Named /status, not /healthz — Google's edge (GFE) intercepts /healthz
+    as a reserved health-check path on *.run.app and serves its own generic
+    404 instead of routing to the container, confirmed live: /demo and
+    /runs both correctly reached this app, /healthz never did. Renaming
+    avoids the collision; nothing else in the product depends on this path.
+    """
     return {"ok": True}
 
 
