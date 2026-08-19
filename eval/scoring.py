@@ -87,8 +87,10 @@ def score(conditions: list[SeededCondition], results: list[DetectionResult]) -> 
 def render_markdown(scorecard: Scorecard) -> str:
     return f"""# Eval results
 
-Regenerate with `python eval/harness.py --n {scorecard.n}`. Do not hand-edit —
-this file is generated so the numbers stay honest.
+Regenerate with `python eval/harness.py` (scores whatever's actually been
+rendered — see backlot/render_eval_conditions.py — not an arbitrary --n;
+--n only applies to `--dry-run`). Do not hand-edit — this file is generated
+so the numbers stay honest.
 
 | Metric | Value |
 |---|---|
