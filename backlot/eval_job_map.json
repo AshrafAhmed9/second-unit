@@ -5,6 +5,9 @@
   "eval-low_samples-003": "low_samples",
   "eval-low_samples-004": "low_samples",
   "eval-low_samples-005": "low_samples",
-  "eval-kill_worker-006": "kill_worker",
-  "eval-kill_worker-007": "kill_worker"
+  "eval-break_texture-006": "break_texture",
+  "eval-break_texture-007": "break_texture",
+  "eval-break_texture-008": "break_texture",
+  "eval-kill_worker-009": "kill_worker",
+  "eval-kill_worker-010": "kill_worker"
 }
