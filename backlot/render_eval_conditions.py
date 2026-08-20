@@ -44,12 +44,19 @@ def render_movie_frame(out_dir: Path, condition: str) -> None:
     """
     out_dir.mkdir(parents=True, exist_ok=True)
     samples = 1 if condition == "low_samples" else 48
+    # Denoising OFF only for low_samples, where visible fireflies are the
+    # entire point. Leaving it off for "clean" too (an earlier version did)
+    # left genuine, if subtle, Cycles grain in the dark fur at 48 samples —
+    # not synthetic, but not what a properly configured production render
+    # looks like either, and a careful vision model correctly called it out
+    # as noise. A real clean render has denoising on; fixed to match.
+    denoising = "False" if condition == "low_samples" else "True"
 
     setup_expr = (
         "import bpy\n"
         "bpy.context.scene.render.engine = 'CYCLES'\n"
         f"bpy.context.scene.cycles.samples = {samples}\n"
-        "bpy.context.scene.cycles.use_denoising = False\n"
+        f"bpy.context.scene.cycles.use_denoising = {denoising}\n"
         "bpy.context.scene.render.resolution_x = 480\n"
         "bpy.context.scene.render.resolution_y = 240\n"
         f"bpy.context.scene.frame_set({FRAME})\n"
