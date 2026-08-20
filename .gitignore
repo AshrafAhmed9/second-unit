@@ -11,6 +11,7 @@ control-room/tsconfig.tsbuildinfo
 
 backlot/assets/*.blend
 backlot/frames_local/
+eval/RESULTS.dry-run.md
 
 .env
 *.env.local

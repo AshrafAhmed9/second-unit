@@ -29,12 +29,21 @@ import random
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "agent"))
+REPO_ROOT = Path(__file__).resolve().parent.parent
+# Both needed, for a real reason: running `python eval/harness.py` directly
+# (as the README's quickstart does) puts eval/'s OWN directory on
+# sys.path[0], not its parent — so `from eval.baseline import ...` below
+# can't resolve `eval` as a package without the repo root also on the path.
+# Found by literally running the README's documented command as written —
+# it failed with ModuleNotFoundError: No module named 'eval'.
+sys.path.insert(0, str(REPO_ROOT))
+sys.path.insert(0, str(REPO_ROOT / "agent"))
 
 from eval.baseline import baseline_would_alert
 from eval.scoring import DetectionResult, SeededCondition, render_markdown, score
 
 RESULTS_PATH = Path(__file__).parent / "RESULTS.md"
+DRY_RUN_RESULTS_PATH = Path(__file__).parent / "RESULTS.dry-run.md"
 JOB_MAP_PATH = Path(__file__).resolve().parent.parent / "backlot" / "eval_job_map.json"
 
 FAULT_TYPES = ["clean", "low_samples", "break_texture", "kill_worker", "starve_memory"]
@@ -195,13 +204,19 @@ def main() -> None:
     if args.dry_run:
         conditions = generate_seed_plan(args.n, seed=args.seed)
         results = run_dry(conditions)
+        # Deliberately NOT eval/RESULTS.md — that file is the real, committed
+        # scorecard judges see. A dry run sharing its output path would
+        # silently overwrite real results with synthetic ones; this actually
+        # happened once, testing the README's own quickstart command.
+        output_path = DRY_RUN_RESULTS_PATH
     else:
         conditions = load_real_conditions()
         print(f"scoring {len(conditions)} REAL rendered conditions against the real agent...")
         results = run_live(conditions)
+        output_path = RESULTS_PATH
 
     scorecard = score(conditions, results)
-    RESULTS_PATH.write_text(render_markdown(scorecard))
+    output_path.write_text(render_markdown(scorecard))
     print(render_markdown(scorecard))
 
 

@@ -13,6 +13,17 @@ Built for the [Agentic Cinema: The Blockbuster Hackathon](https://agentic-cinema
 > tells you what it costs by tomorrow's dailies, and writes the incident back into Grafana
 > the moment a human approves.
 
+## Status
+
+Live, not just described:
+
+- **Agent service:** https://second-unit-agent-1026707323109.us-central1.run.app
+- **Control room:** https://second-unit-control-room-1026707323109.us-central1.run.app
+- **Real film asset:** Blender's official 5.2 LTS splash "Panthera Spelaea" (CC-BY) — see
+  [`backlot/assets/README.md`](backlot/assets/README.md)
+- **Real eval scorecard:** 100% detection, 0% false positives, 8/8 correct — see
+  [`eval/RESULTS.md`](eval/RESULTS.md), reproducible with `python eval/harness.py`
+
 ## The 15-second version
 
 Run `SECOND UNIT` against a render that finished cleanly by every metric. It still raises

@@ -5,18 +5,23 @@ stack. Not a cinematic trailer — the rules require this explicitly.
 
 ## Before recording
 
-1. Run a real `low_samples` backlot render and a real agent pass against it, end to end.
-2. Capture that run's stage outputs into `agent/demo_mode/recorded_run.json` (replacing the
-   placeholder), so Demo Mode on the hosted URL shows this exact real run.
-3. Run `python eval/harness.py --n 30` for real (not `--dry-run`) once the agent is deployed,
-   commit the real `eval/RESULTS.md`.
-4. Have the practitioner quote in hand (see plan item A) before scripting the ending.
+1. ✅ Real film asset in place: `backlot/assets/movie.blend`, Blender's official 5.2 LTS splash
+   "Panthera Spelaea" (CC-BY) — see `backlot/assets/README.md`.
+2. ✅ Real `low_samples`/`break_texture`/`kill_worker`/`clean` batch rendered via
+   `backlot/render_eval_conditions.py` — real fur, real fireflies, real broken textures.
+3. ✅ Real eval scorecard committed (`eval/RESULTS.md`) — 100% detection, 0% false positives,
+   8/8 correct, produced by `eval/harness.py` against the real agent.
+4. ✅ Both services live on Cloud Run: `second-unit-agent` and `second-unit-control-room`.
+5. Capture a real run into `agent/demo_mode/recorded_run.json` via
+   `agent/scripts/capture_demo_mode.py`, then redeploy the agent service so Demo Mode on the
+   hosted URL serves this exact real run.
+6. Have the practitioner quote in hand (see the plan's item A) before scripting the ending.
 
 ## Shot list (target: 2:55, hard cap 3:00)
 
 | Time | Shot | Say / show |
 |---|---|---|
-| 0:00–0:15 | **The hook.** Grafana Cloud dashboard, all green, no active alerts. Cut to EyesAgent flagging frames 1180-1194. Cut to the actual noisy frame. | "Every metric on this render farm says everything is fine. It isn't." |
+| 0:00–0:15 | **The hook.** Grafana Cloud dashboard, all green, no active alerts. Cut to EyesAgent flagging the frame. Cut to the actual noisy fur/fireflies on the real lion render. | "Every metric on this render farm says everything is fine. It isn't." |
 | 0:15–0:40 | The problem, stated as the clock and the money — dailies countdown on screen. | One sentence on why this costs real studios real money, today. |
 | 0:40–1:55 | Live run in the control room: triage → evidence (metrics/logs/traces/vision) → verify loop → impact → plan. End on the human clicking Approve and the annotation/incident appearing **live in the Grafana Cloud UI**, not just in our UI. | Narrate only where it adds information; let the agent stream speak. |
 | 1:55–2:20 | The impact headline and cost payoff on screen. | "$X and Yh saved by catching this before the dailies, not after." |
