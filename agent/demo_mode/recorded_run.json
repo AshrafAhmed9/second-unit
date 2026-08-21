@@ -1,27 +1,57 @@
 {
-  "_NOTE": "PLACEHOLDER. Replace this file by actually running the pipeline (backlot dispatch --condition low_samples, then a real agent run) and capturing the real stage outputs. Ship the real recording before submission — see docs/DEMO.md step 'Capture Demo Mode'. Shape must match control-room/app/types.ts DemoRecording.",
   "job_id": "job-seq042-sh0420",
   "shot_id": "sh0420",
   "sequence": "seq042",
   "due_at": "2026-08-18T09:00:00Z",
   "stages": [
-    { "stage": "TriageAgent", "content": "Highest risk job: job-seq042-sh0420 (seq042/sh0420) — closest deadline, backs tomorrow's client review." },
-    { "stage": "MetricsAgent", "content": "GPU utilization nominal, queue depth normal, no node churn. Metrics: green." },
-    { "stage": "LogsAgent", "content": "No errors, no retries in renderer stderr/stdout for this job. Clean." },
-    { "stage": "TraceAgent", "content": "All frame spans completed within expected duration. Clean." },
-    { "stage": "EyesAgent", "content": "Frames 1180-1194 show visible denoiser fireflies/noise — sample count appears far below production spec. This is a real defect, not stylistic." },
-    { "stage": "SkepticAgent", "content": "Claim is specific (named frame range, named defect type) and consistent across consecutive frames — not isolated grain. CONFIRMED." },
-    { "stage": "ImpactAgent", "content": "seq042/sh0420: 15 frame(s) must be re-rendered (1.63 GPU-hours, $3). Projected finish slips 2.1h past the 09:00 deadline (client review) — ~$1,785 overtime exposure." },
-    { "stage": "PlannerAgent", "content": "Re-render frames 1180-1194 on a clean node with production sample count restored. Root cause: a per-job Cycles override was applied to the wrong frame range." },
-    { "stage": "ActuatorAgent", "content": "(pending approval)" }
+    {
+      "stage": "TriageAgent",
+      "content": "job-seq042-sh0420\nclosest due_at (2026-08-18T09:00:00+00:00), backs a client review, 60 frames remaining"
+    },
+    {
+      "stage": "EyesAgent",
+      "content": "frame_0181.png is covered in denoiser fireflies, multi-colored pixels across the entire frame."
+    },
+    {
+      "stage": "MetricsAgent",
+      "content": "No Prometheus metrics were found for the specified time range (last 30 minutes) in the `grafanacloud-prom` datasource, which is the most likely source for GPU, queue depth, and node churn metrics. Although the datasource itself is healthy, the absence of data prevents me from checking GPU utilization, queue depth, and node churn for job 'job-seq042-sh0420'. Therefore, I cannot report whether these metrics are green or if there are any anomalies."
+    },
+    {
+      "stage": "TraceAgent",
+      "content": "I could not find any per-frame render spans for `job-seq042-sh0420` in the last hour within the Tempo datasource \"grafanacloud-traces\".\n\nIt appears that the `tempo_traceql_search` function does not accept relative time strings like \"now-30m\" and \"now\" directly, as per the explicit instruction. When I omitted the time range, the search defaulted to the last hour, but still returned no traces for the specified job ID.\n\nTherefore, I cannot inspect the render spans as requested, as no data was found."
+    },
+    {
+      "stage": "LogsAgent",
+      "content": "I am unable to perform the requested diagnosis. The Loki datasource `grafanacloud-logs` did not return any label names when queried for the last 30 minutes or the last hour. Loki queries require at least one label matcher to function, and without knowing the available labels, I cannot construct a valid query to search for retry storms, OOM kills, or asset errors for the specified job."
+    },
+    {
+      "stage": "SkepticAgent",
+      "content": "CONFIRMED\n"
+    },
+    {
+      "stage": "ImpactAgent",
+      "content": "seq042/sh0420: 1 frame(s) must be re-rendered (0.11 GPU-hours, $0). Projected finish slips 72.5h past the 09:00 deadline (client review) \u2014 ~$61,585 overtime exposure."
+    },
+    {
+      "stage": "PlannerAgent",
+      "content": "Re-render frame 0181 of job-seq042-sh0420 with adjusted denoiser settings. The visual artifact of denoiser fireflies on frame 0181 indicates a rendering issue specific to denoising. A targeted re-render with adjusted denoiser parameters is required to fix this visual defect."
+    },
+    {
+      "stage": "ActuatorAgent",
+      "content": "Annotation created with ID: 6\n\n"
+    },
+    {
+      "stage": "ActuatorAgent",
+      "content": "Annotation created with ID: 6.\nIncident not created (Grafana IRM unavailable on this stack); annotation is the system of record."
+    }
   ],
-  "impact_headline": "seq042/sh0420: 15 frame(s) must be re-rendered (1.63 GPU-hours, $3). Projected finish slips 2.1h past the 09:00 deadline (client review) — ~$1,785 overtime exposure.",
-  "plan": "Re-render frames 1180-1194 on a clean node with production sample count restored. Root cause: a per-job Cycles override was applied to the wrong frame range.",
-  "actuator_result": "Annotation created on 'Render Farm Ops Wall' at frame timestamp, tagged job-seq042-sh0420. Incident INC-042 opened: 'sh0420 will miss 09:00 client review — denoiser defect, frames 1180-1194'. Activity note added summarizing the evidence chain.",
+  "impact_headline": "seq042/sh0420: 1 frame(s) must be re-rendered (0.11 GPU-hours, $0). Projected finish slips 72.5h past the 09:00 deadline (client review) \u2014 ~$61,585 overtime exposure.",
+  "plan": "Re-render frame 0181 of job-seq042-sh0420 with adjusted denoiser settings. The visual artifact of denoiser fireflies on frame 0181 indicates a rendering issue specific to denoising. A targeted re-render with adjusted denoiser parameters is required to fix this visual defect.",
+  "actuator_result": "Annotation created with ID: 6\n\nAnnotation created with ID: 6.\nIncident not created (Grafana IRM unavailable on this stack); annotation is the system of record.",
   "scorecard": {
     "detection_rate": 1.0,
-    "false_positive_rate": 0.0,
+    "false_positive_rate": 0.25,
     "baseline_detection_rate": 1.0,
-    "vision_only_catches": 10
+    "vision_only_catches": 6
   }
 }

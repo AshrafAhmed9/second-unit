@@ -15,7 +15,6 @@ Run from second-unit/agent/ with real credentials sourced:
 """
 import asyncio
 import json
-import shutil
 import sys
 from pathlib import Path
 
@@ -29,7 +28,6 @@ from google.genai import types
 from second_unit.agent import act_agent, diagnose_agent
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-SOURCE_DEFECT_FRAME = REPO_ROOT / "backlot" / "frames_local" / "eval-low_samples-003" / "frame_0001.png"
 TARGET_JOB_DIR = REPO_ROOT / "backlot" / "frames_local" / "job-seq042-sh0420"
 OUTPUT_PATH = Path(__file__).resolve().parents[1] / "demo_mode" / "recorded_run.json"
 
@@ -43,13 +41,12 @@ def _stage_text(event) -> str:
 
 
 async def main():
-    if not SOURCE_DEFECT_FRAME.exists():
+    frames = sorted(TARGET_JOB_DIR.glob("*.png")) if TARGET_JOB_DIR.exists() else []
+    if not frames:
         raise FileNotFoundError(
-            f"{SOURCE_DEFECT_FRAME} missing — run backlot/render_eval_conditions.py first"
+            f"{TARGET_JOB_DIR} has no frames — run `python backlot/render_demo_batch.py` first"
         )
-    TARGET_JOB_DIR.mkdir(parents=True, exist_ok=True)
-    shutil.copy(SOURCE_DEFECT_FRAME, TARGET_JOB_DIR / "frame_0181.png")
-    print(f"copied real defect frame -> {TARGET_JOB_DIR}")
+    print(f"{len(frames)} real defective frames present in {TARGET_JOB_DIR.name}")
 
     session_service = InMemorySessionService()
     artifact_service = InMemoryArtifactService()

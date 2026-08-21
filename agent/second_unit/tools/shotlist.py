@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import json
 import os
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Optional
 
@@ -17,20 +17,44 @@ from second_unit.schedule import Shot
 
 FIXTURE_PATH = Path(__file__).resolve().parents[2] / "fixtures" / "shotlist.json"
 
+_RELATIVE_PREFIX = "now+"
+
 
 def _load_fixture() -> list[dict]:
     return json.loads(FIXTURE_PATH.read_text())
 
 
 def _parse_due_at(value: str) -> datetime:
-    """Parse due_at as UTC-aware, always. The shotlist fixture (and the
-    Firestore rows seeded from it) store naive ISO strings like
-    "2026-08-18T09:00:00" with no offset; schedule.compute_impact compares
-    this against datetime.now(timezone.utc), which crashes on a naive/aware
-    mismatch (`can't subtract offset-naive and offset-aware datetimes`).
-    Found during the day-7 vertical slice test — fix at the parsing
-    boundary so every Shot.due_at is aware from the moment it's constructed.
+    """Parse due_at as UTC-aware, always.
+
+    Supports a relative form ("now+2h", "now+90m") alongside absolute ISO
+    timestamps. The relative form exists for a real reason: the fixture
+    originally hardcoded 2026-08-18T09:00:00, which silently rotted into the
+    past days later and made the agent report a 72-hour slip and ~$61,585 of
+    overtime exposure for one wasted frame — arithmetic that was correct but
+    nonsense, and which only gets worse the longer the project sits between
+    submission and judging. A relative deadline keeps the demo telling the
+    same, credible story whenever it's run.
+
+    Absolute timestamps also normalize to UTC-aware here: the fixture (and
+    the Firestore rows seeded from it) store naive ISO strings with no
+    offset, and schedule.compute_impact compares against
+    datetime.now(timezone.utc), which raises on a naive/aware mismatch.
+    Found during the day-7 vertical slice test — fixed at the parsing
+    boundary so every Shot.due_at is aware the moment it's constructed.
     """
+    if value.startswith(_RELATIVE_PREFIX):
+        amount = value[len(_RELATIVE_PREFIX):].strip()
+        unit = amount[-1]
+        qty = float(amount[:-1])
+        if unit == "h":
+            delta = timedelta(hours=qty)
+        elif unit == "m":
+            delta = timedelta(minutes=qty)
+        else:
+            raise ValueError(f"unsupported relative due_at unit in {value!r} (use 'h' or 'm')")
+        return datetime.now(timezone.utc) + delta
+
     parsed = datetime.fromisoformat(value)
     return parsed if parsed.tzinfo is not None else parsed.replace(tzinfo=timezone.utc)
 

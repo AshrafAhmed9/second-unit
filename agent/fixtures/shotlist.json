@@ -4,9 +4,9 @@
     "sequence": "seq042",
     "job_ids": ["job-seq042-sh0420"],
     "frames_total": 240,
-    "frames_done": 180,
+    "frames_done": 228,
     "render_minutes_per_frame": 6.5,
-    "due_at": "2026-08-18T09:00:00",
+    "due_at": "now+2h",
     "client_review": true
   },
   {
@@ -16,7 +16,7 @@
     "frames_total": 96,
     "frames_done": 96,
     "render_minutes_per_frame": 4.0,
-    "due_at": "2026-08-19T09:00:00",
+    "due_at": "now+26h",
     "client_review": false
   }
 ]
