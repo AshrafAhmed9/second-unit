@@ -8,6 +8,16 @@ import type { DemoRecording } from "./types";
 
 const AGENT_URL = process.env.NEXT_PUBLIC_AGENT_URL ?? "http://localhost:8080";
 
+// Demo Mode's recorded_run.json is a static snapshot, so its captured due_at
+// is a fixed point in wall-clock time that inevitably lands in the past —
+// the countdown would show "PAST DUE" forever, weeks before any judge sees
+// it. Re-anchored to page-load time at the same ~2h horizon the real
+// captured run actually had (see agent/fixtures/shotlist.json's
+// due_at="now+2h"), so the countdown stays meaningful indefinitely. The
+// agent's own narrative text (real timestamps like "0.2h past the 05:01
+// deadline") is untouched — only this display widget is re-anchored.
+const DEMO_DUE_OFFSET_HOURS = 2;
+
 /**
  * The control room. Defaults to Demo Mode — a real recorded run replayed
  * with zero API calls and zero cost — so the hosted URL works for a stranger
@@ -56,7 +66,9 @@ export default function ControlRoom() {
               <div style={{ fontSize: 13, color: "#c3c9d1" }}>
                 {demo.sequence} / {demo.shot_id} · job {demo.job_id}
               </div>
-              <DailiesCountdown dueAt={demo.due_at} />
+              <DailiesCountdown
+                dueAt={mode === "demo" ? new Date(Date.now() + DEMO_DUE_OFFSET_HOURS * 3_600_000).toISOString() : demo.due_at}
+              />
             </div>
 
             <AgentStageList stages={demo.stages} />

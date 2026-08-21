@@ -1,6 +1,12 @@
-"""One-time seed: push agent/fixtures/shotlist.json into real Firestore, so
-the production code path in tools/shotlist.py (not just its local-fixture
-fallback) has real data to read during development and the eval harness.
+"""Push agent/fixtures/shotlist.json into real Firestore, so the production
+code path in tools/shotlist.py (not just its local-fixture fallback) has
+real data to read.
+
+NOT actually one-time — re-run this every time fixtures/shotlist.json
+changes. Found the hard way: capturing the demo with GOOGLE_CLOUD_PROJECT
+set reads Firestore, not the local file, so editing the fixture alone did
+nothing — Firestore kept serving a due_at that had already rotted into the
+past until this was re-run.
 """
 import json
 from pathlib import Path

@@ -30,7 +30,15 @@ gcloud run deploy second-unit-agent \
   --max-instances 3 \
   --memory 1Gi \
   --set-secrets "GRAFANA_URL=grafana-url:latest,GRAFANA_SERVICE_ACCOUNT_TOKEN=grafana-service-account-token:latest,GRAFANA_CLOUD_METRICS_USER=grafana-cloud-metrics-user:latest,GRAFANA_CLOUD_METRICS_TOKEN=grafana-cloud-metrics-token:latest,GRAFANA_CLOUD_LOGS_USER=grafana-cloud-logs-user:latest,GRAFANA_CLOUD_LOGS_TOKEN=grafana-cloud-logs-token:latest" \
-  --set-env-vars "GOOGLE_CLOUD_PROJECT=${PROJECT_ID},GOOGLE_GENAI_USE_VERTEXAI=TRUE,GOOGLE_CLOUD_LOCATION=${REGION}"
+  --set-env-vars "GOOGLE_CLOUD_PROJECT=${PROJECT_ID},GOOGLE_GENAI_USE_VERTEXAI=TRUE,GOOGLE_CLOUD_LOCATION=${REGION},BACKLOT_BUCKET=${PROJECT_ID}-backlot"
+
+# BACKLOT_BUCKET is what makes Live Mode work on the deployed service, not
+# just Demo Mode. Cloud Run's local filesystem is ephemeral and per-instance
+# — without a bucket, EyesAgent's load_frames finds nothing on a real
+# container, so a judge clicking "Live Mode" would get an agent with no
+# picture to look at. Create the bucket once and upload real frames with:
+#   gcloud storage buckets create gs://${PROJECT_ID}-backlot --location=us-central1
+#   gcloud storage cp -r ../backlot/frames_local/job-seq042-sh0420 gs://${PROJECT_ID}-backlot/
 
 echo "Deployed. min-instances=0 means this scales to zero and costs ~nothing"
 echo "when idle — important for keeping the hosted URL alive through judging"
