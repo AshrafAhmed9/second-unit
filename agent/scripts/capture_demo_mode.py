@@ -67,7 +67,11 @@ async def main():
             print(f"  [{event.author}] {text[:100]}")
 
     diag_state = (await session_service.get_session(app_name=APP_NAME, user_id="demo", session_id=session.id)).state
-    job_id = diag_state.get("triaged_job_id", "job-seq042-sh0420").strip()
+    # TriageAgent's instruction allows a reasoning line after the bare job_id
+    # ("job-seq042-sh0420\nclosest due_at ..."); take only the first line.
+    # Found in the first real capture: the full multi-line text ended up in
+    # the recording's job_id field verbatim.
+    job_id = diag_state.get("triaged_job_id", "job-seq042-sh0420").strip().splitlines()[0].strip()
 
     print("\n--- human approval gate ---")
     act_runner = Runner(agent=act_agent, app_name=APP_NAME, session_service=session_service, artifact_service=artifact_service)

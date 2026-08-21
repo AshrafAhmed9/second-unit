@@ -2,10 +2,29 @@
 
 Runs the official open-source `grafana/mcp-grafana` server as a stdio subprocess,
 authenticated against a real Grafana Cloud stack with a service-account token.
-This is a deliberate choice over the hosted `mcp.grafana.com` endpoint, which
-requires an interactive OAuth 2.1 browser flow that a headless Cloud Run agent
-cannot complete. See second-unit/README.md "Grafana MCP transport" for the
-day-3 compliance note and the OAuth fallback path.
+
+Both transports are explicitly permitted by the Grafana track rules, which
+require using "the Grafana Cloud MCP server (the official grafana/mcp-grafana
+server, or the hosted Grafana Cloud MCP endpoint)". This project uses the
+first, for a verified reason rather than a preference:
+
+The hosted endpoint (`https://mcp.grafana.com/mcp`, the path shown in ADK's
+own docs at adk.dev/integrations/grafana-cloud/) authenticates *only* via an
+interactive OAuth 2.1 browser consent flow. Tested directly against it with a
+service-account token: `401 {"error":"invalid_token"}`. Grafana's own docs
+confirm this is by design — "Unlike the open source Grafana MCP server, which
+runs locally and requires manual service account token configuration, the
+Grafana Cloud MCP server is fully hosted and uses OAuth 2.1 authorization."
+A Cloud Run container has no browser to complete that consent in, so the
+hosted endpoint cannot authenticate unattended. The self-hosted official
+binary can, and exposes the same tool surface (33 read tools verified live,
+including proxied Tempo tools).
+
+Required environment (see infra/README.md for how these are provisioned):
+  GRAFANA_URL                    e.g. https://yourstack.grafana.net
+  GRAFANA_SERVICE_ACCOUNT_TOKEN  a service account token with Editor role
+                                  (Editor is required for the write-back tools:
+                                  annotations, incidents, activity notes)
 
 Required environment (see infra/README.md for how these are provisioned):
   GRAFANA_URL                    e.g. https://yourstack.grafana.net
