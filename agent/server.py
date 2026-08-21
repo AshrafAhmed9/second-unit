@@ -35,6 +35,23 @@ app.add_middleware(
 
 _pending_plans: dict[str, dict] = {}
 
+
+def _stage_text(event) -> str:
+    """Extract just the human-readable text from an ADK event, discarding
+    function-call/function-response frames and internal fields like
+    thought_signature. Real bug, found by actually running Live Mode against
+    the deployed service: this endpoint was sending str(event.content) — the
+    raw Python repr of the whole event object, including binary
+    thought_signature blobs — straight into the SSE stream. The control room
+    just renders `content` as plain text, so a judge clicking Live Mode
+    would see garbled internal object dumps instead of the clean narration
+    Demo Mode shows. capture_demo_mode.py already had the correct extraction
+    for the recorded-demo path; this brings the live path in line with it.
+    """
+    if not event.content or not event.content.parts:
+        return ""
+    return "".join(p.text for p in event.content.parts if p.text)
+
 # Shared across both runners deliberately. Each phase used to get its own
 # InMemoryRunner, which silently creates its OWN isolated session store —
 # the approve step then couldn't find the diagnose step's session at all
@@ -95,7 +112,10 @@ async def start_run(job_id: str | None = None):
             session_id=run_id,
             new_message=message,
         ):
-            payload = {"stage": event.author, "content": str(event.content)}
+            text = _stage_text(event)
+            if not text:
+                continue  # tool-call / tool-response frames carry no narration to show
+            payload = {"stage": event.author, "content": text}
             if event.is_final_response():
                 _pending_plans[run_id] = payload
             yield {"event": "stage", "data": json.dumps(payload)}
@@ -120,7 +140,10 @@ async def approve_run(run_id: str):
             session_id=run_id,
             new_message=message,
         ):
-            yield {"event": "stage", "data": json.dumps({"stage": event.author, "content": str(event.content)})}
+            text = _stage_text(event)
+            if not text:
+                continue
+            yield {"event": "stage", "data": json.dumps({"stage": event.author, "content": text})}
         del _pending_plans[run_id]
 
     return EventSourceResponse(event_stream())
