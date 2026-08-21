@@ -63,12 +63,24 @@ THE BACKLOT — a real render farm (Cloud Run Jobs)
   Real induced faults (see backlot/conditions/) — not synthetic telemetry.
 ```
 
-Full rationale for every architectural decision — why the MCP server runs as a headless
-sidecar instead of the hosted OAuth endpoint, why the farm renders real frames instead of
-simulating telemetry, why the agent graph is 8 agents and not 30 — is in
-[`/Users/ashraf/.claude/plans/this-is-a-repo-swirling-dream.md`](../../.claude/plans/this-is-a-repo-swirling-dream.md)
-(kept alongside the repo during development; a trimmed design rationale will be folded into
-this README before submission).
+**Three architectural decisions, and why:**
+
+- **MCP transport: self-hosted `grafana/mcp-grafana`, not the hosted `mcp.grafana.com`
+  endpoint.** The track rules permit either. Tested the hosted one directly with a
+  service-account token — `401 invalid_token` — because it's OAuth-2.1-browser-consent-only
+  by design (confirmed in Grafana's own docs). A Cloud Run container has no browser to
+  complete that in. The self-hosted binary authenticates unattended and exposes the same 33+
+  tools, including proxied Tempo access.
+- **The farm renders real frames, not simulated telemetry.** A Grafana engineer spots fake
+  metrics in seconds, and the entire thesis — "green metrics, broken art" — only means
+  something if the metrics really are green and the art really is broken. Every fault in
+  `backlot/conditions/` is induced by a real render condition: sample count actually forced
+  to 1, textures actually unpacked and repointed to a dead path, workers actually SIGKILLed.
+- **The agent graph is 8 agents, not more.** Every agent earns its place by moving a number
+  in `eval/RESULTS.md` or appearing in the demo — nothing was added to hit a target count.
+  Complexity without a measurable purpose was cut on sight during development (an earlier
+  version had 5 failure-class specialists and a memory agent; neither moved the eval numbers,
+  so both were removed).
 
 ## The agent graph
 
