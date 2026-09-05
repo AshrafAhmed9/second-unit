@@ -1,0 +1,55 @@
+1
+00:00:00,000 --> 00:00:08,000
+Grafana Cloud · no alerts firing
+
+2
+00:00:08,000 --> 00:00:15,000
+Green metrics. Broken art.
+
+3
+00:00:15,000 --> 00:00:30,000
+Next dailies screening: 2h 14m
+
+4
+00:00:30,000 --> 00:00:42,000
+Triage → Evidence → Verify → Impact → Plan → Approve → Write-back
+
+5
+00:00:42,000 --> 00:00:50,000
+job-seq042-sh0420 · 12 frames remaining
+
+6
+00:01:12,000 --> 00:01:25,000
+3 of 4 agents: healthy · 1 of 4: looked at the frame
+
+7
+00:01:25,000 --> 00:01:36,000
+Verify loop · 0% false positives across 11 real renders
+
+8
+00:01:36,000 --> 00:01:48,000
+Human approval gate
+
+9
+00:01:48,000 --> 00:02:06,000
+Annotation + agent traces · written live via Grafana MCP
+
+10
+00:02:06,000 --> 00:02:20,000
+second_unit_visual_defects_detected_total · alert rule provisioned
+
+11
+00:02:20,000 --> 00:02:32,000
+$2 now vs $142 tomorrow · ×1,500 shots per feature
+
+12
+00:02:32,000 --> 00:02:38,000
+Same agent · different input · different verdict
+
+13
+00:02:38,000 --> 00:02:44,000
+6 defects the metrics-only baseline missed entirely
+
+14
+00:02:44,000 --> 00:02:50,000
+Gemini · ADK · Cloud Run · Grafana Cloud MCP (read + write) · Apache-2.0

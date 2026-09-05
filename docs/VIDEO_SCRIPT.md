@@ -1,209 +1,135 @@
-# SECOND UNIT — demo video script (target 2:55)
+# SECOND UNIT — demo video script (target 2:50, cap 3:00)
 
-Three separate tracks, kept deliberately distinct:
+Three tracks, kept deliberately distinct:
 - **ON SCREEN:** what the recording shows.
-- **SAY:** your spoken narration.
-- **CAPTION:** short burned-in text overlay (lower-third or on-screen
-  label). Never a transcript of SAY: it either labels what's on screen or
-  surfaces a number the voiceover doesn't say aloud, so a muted viewer gets
-  different, complementary information rather than subtitles.
+- **SAY:** verbatim spoken narration.
+- **CAPTION:** burned-in text overlay. Never a transcript of SAY — it
+  carries a number or label the voice doesn't say, so a viewer watching
+  muted gets genuinely different, complementary information.
 
-## 0:00–0:07 — Cold open, no logo, no intro card
+**Setup:** two tabs only, notifications off, bookmarks hidden. **Tab 1** =
+the Grafana ops-wall dashboard (`grafana/dashboards/second-unit-ops-wall.json`,
+imported into your stack — Dashboards → Browse; range set to Last 6 hours).
+**Tab 2** = the control room
+(https://second-unit-control-room-1026707323109.us-central1.run.app). Wake
+the Grafana stack 10 minutes before recording
+(https://noblesunflower3144.grafana.net — click through the loading
+checkbox) — free-tier stacks idle out and Live Mode will show an honest
+"asleep" message instead of running if you don't.
 
-**ON SCREEN:** Full-screen Grafana Cloud dashboard already up, "SECOND UNIT —
-Render Farm Ops Wall." CPU-utilization panel green, no active alerts,
-dashboard sitting there quietly for the full 7 seconds.
+## 0:00–0:08 — Tab 1, dashboard, green, motionless
 
-**SAY:**
-> "This dashboard says everything is fine."
+**SAY:** "This dashboard says every render on the farm is fine."
+**CAPTION:** `Grafana Cloud · no alerts firing`
 
-**CAPTION:** `No active alerts.`
+Flat delivery. Let the graph sit there doing nothing.
 
-Say it flat, not dramatic. Let the boring green graph sit on screen doing
-nothing — that's the point.
+## 0:08–0:15 — Hard cut, full screen, to frame_0185.png
 
-## 0:07–0:15 — The cut
-
-**ON SCREEN:** Hard cut to the actual rendered frame — the panther shot
-buried in denoiser fireflies. No transition effect, just cut.
-
-**SAY:**
-> "It isn't."
-
+**SAY:** "It isn't."
 **CAPTION:** `Green metrics. Broken art.`
 
-This is your title card, delivered as text while the voice says something
-shorter. Don't say the caption out loud — let it land as its own beat.
+Don't say the caption aloud. Hold three seconds after the line. This is
+the whole hook — re-record until it lands with zero explanation needed.
 
-## 0:15–0:28 — Who cares, and why now
+## 0:15–0:30 — Tab 2, countdown ticking
 
-**ON SCREEN:** Control room UI, dailies countdown visible, ticking down
-toward the client review deadline.
-
-**SAY:**
-> "Render farms are the biggest cost in animation and VFX pipelines. When a
-> shot comes out broken like this, nobody catches it until dailies the next
-> morning. Hours too late."
-
+**SAY:** "Render farms are the biggest line item in animation and VFX. When
+a shot comes out broken like that, nobody notices until the artist opens
+dailies the next morning. Hours too late, and the shot has to go again."
 **CAPTION:** `Next dailies screening: 2h 14m`
 
-Caption shows the live countdown number, not a repeat of the sentence.
+## 0:30–0:42 — Cursor over the agent list
 
-## 0:28–0:40 — What this actually is
-
-**ON SCREEN:** Stay on control room. Cursor hovers over the agent crew list
-(Triage, Evidence, Verify, Impact, Plan) without clicking yet.
-
-**SAY:**
-> "SECOND UNIT watches the farm the way Grafana does. It also looks at the
-> frames themselves, because nothing else in the pipeline actually does."
-
+**SAY:** "SECOND UNIT watches the farm the way Grafana does. It also looks
+at the frames themselves, which nothing else in the pipeline does."
 **CAPTION:** `Triage → Evidence → Verify → Impact → Plan → Approve → Write-back`
 
-The agent pipeline named in one line — information the voiceover doesn't
-spell out.
+## 0:42–0:50 — Click Live Mode, then Start live run
 
-## 0:40–0:55 — Kick off the real run
-
-**ON SCREEN:** Click into Live Mode (or start the recorded run if the stack's
-asleep on record day — see note below). TriageAgent's line streams in.
-
-**SAY:**
-> "Here it is, running live."
-
+**SAY:** "This is running live, not a replay."
 **CAPTION:** `job-seq042-sh0420 · 12 frames remaining`
 
-Then go quiet and let the agent output stream on screen for the next
-segment — don't narrate over every line. Let it breathe.
+## 0:50–1:25 — Stages stream in. Silence until 1:12
 
-## 0:55–1:25 — Evidence agents stream in (mostly silent, agent text carries it)
+On screen: LogsAgent `clean` · MetricsAgent (real result this run) ·
+TraceAgent `20 spans` · EyesAgent flags the defect, **with the frame
+visible in its card**.
 
-**ON SCREEN:** Let these stream naturally, in order, full text visible long
-enough to read:
-- LogsAgent: *"appears clean; no retry storms, OOM kills, or asset errors"*
-- MetricsAgent: *"CPU utilization... between 48% and 67%. Considered green"*
-- TraceAgent: *"20 render spans... no orphaned/retried spans"*
-- EyesAgent: *"almost entirely obscured by denoiser noise... not clean"*
+**SAY** (at ~1:12, as the frame appears): "Three agents just called this
+job healthy. The fourth one actually looked at the picture."
+**CAPTION** (1:12): `3 of 4 agents: healthy · 1 of 4: looked at the frame`
 
-The agents' own on-screen text is doing the work here — no separate caption
-needed on top of it, that would be redundant with what's already readable.
+Don't narrate 0:50–1:12 otherwise — the real agent output on screen is more
+persuasive than commentary over it.
 
-**SAY (one line only, timed to land as EyesAgent's text appears):**
-> "Three agents just said this job is healthy. One of them actually looked
-> at the picture."
+## 1:25–1:36 — SkepticAgent CONFIRMED
 
-## 1:25–1:40 — The skeptic
+**SAY:** "A skeptic pass challenges the finding first, so a stray shadow
+doesn't become a false alarm."
+**CAPTION:** `Verify loop · 0% false positives across 11 real renders`
 
-**ON SCREEN:** SkepticAgent's "CONFIRMED" appears.
+## 1:36–1:48 — Impact and Planner land. Click Approve
 
-**SAY:**
-> "Before this goes anywhere, a second pass challenges the finding, so a
-> stray shadow doesn't turn into a false alarm."
+**SAY:** "Nothing gets written anywhere until a human approves it."
+**CAPTION:** `Human approval gate`
 
-**CAPTION:** `Verify loop: cuts false positives before anything ships`
+## 1:48–2:06 — Tab 1: the annotation lands, then pan to the Tempo panel
 
-## 1:40–1:55 — Approve
+**SAY:** "That writes back into Grafana. There's the annotation, landing on
+the dashboard. And the agent's own reasoning is sitting in Tempo, so you
+can debug the AI the same way you debug everything else."
+**CAPTION:** `Annotation + agent traces · written live via Grafana MCP`
 
-**ON SCREEN:** ImpactAgent and PlannerAgent lines land. Cursor moves to the
-Approve button, clicks it.
+Record this live — don't reuse an older annotation. If it fails on the
+take, cut the beat rather than fake it.
 
-**SAY:**
-> "A human still approves before anything gets written back."
+## 2:06–2:20 — Pan to the defect metric panel and the alert rule
 
-**CAPTION:** `Nothing writes back without a human click.`
+**SAY:** "And the finding becomes a normal Prometheus metric with an alert
+rule on it. A failure your dashboards structurally could not see is now
+something you can page on."
+**CAPTION:** `second_unit_visual_defects_detected_total · alert rule provisioned`
 
-## 1:55–2:15 — The write-back, live in Grafana
+This is the beat that turns a clever demo into a system — don't rush it.
 
-**ON SCREEN:** Cut to the actual Grafana Cloud UI, showing the new
-annotation appearing on the dashboard timeline in real time (or the
-annotation ID confirmation on screen). This is the shot that proves the
-write-back is real, not a claim.
+## 2:20–2:32 — Tab 2, impact headline with the extrapolation visible
 
-**SAY:**
-> "That approval writes straight back into Grafana. Watch. The annotation
-> lands right there."
+**SAY:** "Two dollars of re-render instead of a hundred and forty-two of
+overtime. On one shot. A feature carries about fifteen hundred of them."
+**CAPTION:** `$2 now vs $142 tomorrow · ×1,500 shots per feature`
 
-**CAPTION:** `Annotation #10 · written live via Grafana MCP`
+## 2:32–2:44 — VisionProof panel, clean and broken side by side
 
-## 2:15–2:30 — The cost, in plain numbers
+**SAY:** "Same pipeline, two frames. Clean render in, it says clean.
+Broken render in, it flags it. That's eleven renders in the scorecard,
+every one scored against what threshold alerting would have caught."
+**CAPTION** (2:32): `Same agent · different input · different verdict`
+**CAPTION** (2:38): `6 defects the metrics-only baseline missed entirely`
 
-**ON SCREEN:** Impact headline on screen, full text visible: "8 frames must
-be re-rendered — projected finish slips past the client-review deadline,
-~$142 in overtime exposure."
+## 2:44–2:50 — Stack card, then the URL
 
-**SAY:**
-> "Eight frames, caught mid-render instead of at nine a.m. tomorrow."
-
-**CAPTION:** `$2 re-render now vs. $142 overtime exposure tomorrow`
-
-Let the voiceover make the point in one sentence; let the caption carry the
-actual math so it's legible even paused.
-
-## 2:30–2:45 — The scorecard
-
-**ON SCREEN:** Full-screen the scorecard panel — lead number first: "6
-defects the baseline missed."
-
-**SAY:**
-> "This isn't a one-off catch. Every one of these is an actual render,
-> scored against a threshold-alerting baseline."
-
-**CAPTION:** `6 defects the metrics-only baseline missed entirely`
-
-Use whatever the freshly regenerated numbers say once the demo recording is
-resynced — detection rate, false-positive rate, and the "6" should all match
-`eval/RESULTS.md` exactly. As of the last harness run: 100% detection, 0%
-false positives, 6 defects caught. The live demo currently still shows a
-stale 25% false-positive number until the Grafana stack is woken and the
-recording is recaptured.
-
-## 2:45–2:53 — The practitioner quote
-
-**ON SCREEN:** Full-screen text card, the person's name and role, quote in
-large text.
-
-**SAY:** Nothing — let it sit in silence for the read time, no voiceover
-competing with it.
-
-**CAPTION:** The quote itself, verbatim, once you have it, with the person's
-name and role underneath — this is the one beat where the caption legitimately
-IS the entire content, since there's no separate narration to differ from.
-
-## 2:53–3:00 — Stack card and out
-
-**ON SCREEN:** Simple text card, then the hosted URL.
-
-**SAY:**
-> "SECOND UNIT. Built on Gemini and Grafana."
-
-**CAPTION:** `Gemini · Google ADK · Cloud Run · Grafana Cloud MCP (read + write) · Apache-2.0`
+**SAY:** "SECOND UNIT. Gemini and ADK on Cloud Run, Grafana Cloud MCP read
+and write. Every frame in this video is a real render."
+**CAPTION:** `Gemini · ADK · Cloud Run · Grafana Cloud MCP (read + write) · Apache-2.0`
 
 ---
 
-## Notes before you shoot
+## Shooting notes
 
-- **Read every line out loud before you shoot, not just off the page.**
-  The first draft of this leaned on the word "real" in almost every line
-  ("real run," "real render," "real annotation," "real dashboard") — that
-  reads fine as bullet points but sounds like a talking point on repeat when
-  spoken back to back. Fixed in this version, but if you adjust any line,
-  say it out loud once and check you're not doing the same thing with a
-  different word.
-- **Captions are not subtitles.** Every caption above says something the
-  voiceover doesn't — a live number, a label, a fact — so a viewer watching
-  muted gets a genuinely different (and still complete) read of the project
-  than someone only listening. Don't caption your own sentences verbatim.
-- **Don't over-narrate the middle.** A judge reading real agent output on
-  screen is more convincing than you summarizing it. The one spoken line in
-  the 0:55–1:25 block is the only narration in that whole segment.
-- **The 0:00–0:15 hook is the whole game.** Re-shoot it until "green
-  metrics, broken art" lands with zero setup needed. If you're explaining
-  the joke, it's not landing.
-- **Wake the Grafana stack immediately before recording**
-  (`https://noblesunflower3144.grafana.net`), and don't record the
-  write-back shot until you've confirmed the annotation actually appears —
-  don't fake that beat.
-- **Sync the demo recording before the final take.** Once the stack is
-  awake, recapture `agent/demo_mode/recorded_run.json` and redeploy so the
-  on-screen scorecard matches the real 0% false-positive number instead of
-  the stale 25% currently baked into the deployed recording.
+- **The first 15 seconds decide this.** Re-record until "green metrics,
+  broken art" lands with no explanation needed.
+- Do not narrate 0:50–1:12 — let the agent output carry it.
+- If the live run misbehaves, fall back to Demo Mode and change one word:
+  "this is a recorded run." Never present a replay as live.
+- Every caption states something the voice does not. Never subtitle
+  yourself.
+- **Read every line out loud before shooting.** An earlier draft of this
+  script leaned on the word "real" in five separate lines and it sounded
+  like a talking point on repeat. It now appears once, in the closing
+  line, where it earns its place. If you rewrite a line, say it aloud and
+  check you haven't reintroduced the same tic with a different word.
+- The dropped practitioner-quote beat is intentionally not here — the
+  VisionProof section (2:32–2:44) replaces it with real evidence (two real
+  verdicts on two real frames) instead of testimony that was never
+  obtained.
