@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { DailiesCountdown } from "./components/DailiesCountdown";
 import { AgentStageList } from "./components/AgentStageList";
 import { ScoreCard } from "./components/ScoreCard";
+import { ImpactExtrapolation } from "./components/ImpactExtrapolation";
 import { ApprovalGate } from "./components/ApprovalGate";
 import { ContradictionHero } from "./components/ContradictionHero";
 import { VisionProof } from "./components/VisionProof";
@@ -184,6 +185,7 @@ export default function ControlRoom() {
                   {mode === "demo" ? demo!.impact_headline : live.stages.find((s) => s.stage === "ImpactAgent")?.content ?? "Pending…"}
                 </div>
               </div>
+              {mode === "demo" && <ImpactExtrapolation />}
               {mode === "demo" && <ScoreCard scorecard={demo!.scorecard} />}
             </div>
           </div>

@@ -19,11 +19,21 @@ Live, not just described:
 
 - **Agent service:** https://second-unit-agent-1026707323109.us-central1.run.app
 - **Control room:** https://second-unit-control-room-1026707323109.us-central1.run.app
+- **Demo video:** _(add before submitting — see [`docs/VIDEO_SCRIPT.md`](docs/VIDEO_SCRIPT.md))_
 - **Real film asset:** Blender's official 5.2 LTS splash "Panthera Spelaea" (CC-BY) — see
   [`backlot/assets/README.md`](backlot/assets/README.md)
 - **Real eval scorecard:** 11 real rendered conditions, 100% detection, 0% false positives,
   6 defects the metrics-only baseline missed entirely — see
   [`eval/RESULTS.md`](eval/RESULTS.md), reproducible with `python eval/harness.py`
+
+## Judging criteria → where to look
+
+| Criterion | Evidence |
+|---|---|
+| Quality of the idea | "Why this exists" below; the contradiction — real green metrics, real broken frame — is on the control room's landing view |
+| Technological implementation | 11-agent graph, real bidirectional Grafana MCP, real OTel traces/metrics/logs, a provisioned Grafana alert rule — see "Architecture" and [`docs/DECISIONS.md`](docs/DECISIONS.md) |
+| Potential impact | "Why this exists" + the control room's impact panel (per-shot real number, feature-scale extrapolation with its assumptions visible) |
+| Design | The control room itself; [`control-room/design/comp.html`](control-room/design/comp.html) for the design pass that shaped it |
 
 ## The 15-second version
 
@@ -77,11 +87,11 @@ THE BACKLOT — a real render farm (Cloud Run Jobs)
   something if the metrics really are green and the art really is broken. Every fault in
   `backlot/conditions/` is induced by a real render condition: sample count actually forced
   to 1, textures actually unpacked and repointed to a dead path, workers actually SIGKILLed.
-- **The agent graph is 8 agents, not more.** Every agent earns its place by moving a number
+- **The agent graph is 11 agents, not more.** Every agent earns its place by moving a number
   in `eval/RESULTS.md` or appearing in the demo — nothing was added to hit a target count.
   Complexity without a measurable purpose was cut on sight during development (an earlier
   version had 5 failure-class specialists and a memory agent; neither moved the eval numbers,
-  so both were removed).
+  so both were removed). See [`docs/DECISIONS.md`](docs/DECISIONS.md) for what else got cut.
 
 ## The agent graph
 
@@ -91,13 +101,14 @@ THE BACKLOT — a real render farm (Cloud Run Jobs)
 | 2 | MetricsAgent / LogsAgent / TraceAgent | Grafana MCP → Prometheus / Loki / Tempo: is the infra healthy? |
 | 2 | EyesAgent | Gemini vision on the actual frames: is the **picture** ok? |
 | 3 | VerifyLoop (Skeptic → Re-examine, ≤3 rounds) | Cuts false positives — proven in `eval/RESULTS.md`, not asserted |
-| 4 | ImpactAgent | Deterministic deadline/cost math (`agent/second_unit/schedule.py`, pure + unit-tested) |
-| 5 | PlannerAgent | Proposes a fix, with reasoning |
-| 6 | **Human approval gate** | Nothing mutates without a click |
-| 7 | ActuatorAgent | Writes an incident + annotations back into Grafana |
+| 4 | VerdictAgent | Structured `has_defect: bool` from the evidence text; emits the Prometheus defect metric |
+| 5 | ImpactAgent | Deterministic deadline/cost math (`agent/second_unit/schedule.py`, pure + unit-tested) |
+| 6 | PlannerAgent | Proposes a fix, with reasoning |
+| 7 | **Human approval gate** | Nothing mutates without a click |
+| 8 | ActuatorAgent | Writes an incident + annotations back into Grafana |
 
 Every agent above earns its place because removing it breaks either the eval scorecard or
-the demo — see the design rationale for what was deliberately cut.
+the demo — see [`docs/DECISIONS.md`](docs/DECISIONS.md) for what was deliberately cut.
 
 ## Quickstart (no cloud credentials required)
 
