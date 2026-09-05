@@ -27,6 +27,13 @@ explicitly.
    opens, since the stack will be asleep by then regardless of what's shown in the video.
 7. Confirm Live Mode actually completes a full run through Approve on the **hosted** control
    room (not localhost) — instance affinity and stream buffering only surface there.
+8. If you're showing the CPU/duration panels on the imported ops-wall dashboard: they're
+   gauges/histograms from real render pushes, so a Prometheus instant query goes stale a few
+   minutes after the last push. Run one real render
+   (`python backlot/worker/render_worker.py --job-id job-seq042-sh0420 --blend
+   backlot/assets/movie.blend --frame-start <N> --frame-end <N> --out /tmp/refresh --condition
+   clean`) shortly before recording if those two panels need to look live on camera. A single
+   frame took ~9 minutes in testing; don't start this with less lead time than that.
 
 ## Non-negotiables
 
