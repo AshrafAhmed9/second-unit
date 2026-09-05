@@ -21,7 +21,8 @@ Live, not just described:
 - **Control room:** https://second-unit-control-room-1026707323109.us-central1.run.app
 - **Real film asset:** Blender's official 5.2 LTS splash "Panthera Spelaea" (CC-BY) — see
   [`backlot/assets/README.md`](backlot/assets/README.md)
-- **Real eval scorecard:** 100% detection, 0% false positives, 8/8 correct — see
+- **Real eval scorecard:** 11 real rendered conditions, 100% detection, 0% false positives,
+  6 defects the metrics-only baseline missed entirely — see
   [`eval/RESULTS.md`](eval/RESULTS.md), reproducible with `python eval/harness.py`
 
 ## The 15-second version
@@ -122,8 +123,7 @@ tier — see `infra/README.md` for exact setup). Zero paid services are used.
 cd second-unit/infra
 PROJECT_ID=your-project ./00_project_setup.sh
 PROJECT_ID=your-project GRAFANA_URL=... GRAFANA_SERVICE_ACCOUNT_TOKEN=... \
-  GRAFANA_CLOUD_METRICS_USER=... GRAFANA_CLOUD_METRICS_TOKEN=... \
-  GRAFANA_CLOUD_LOGS_USER=... GRAFANA_CLOUD_LOGS_TOKEN=... ./01_secrets.sh
+  OTEL_EXPORTER_OTLP_ENDPOINT=... OTEL_EXPORTER_OTLP_HEADERS=... ./01_secrets.sh
 PROJECT_ID=your-project ./02_deploy_agent.sh
 PROJECT_ID=your-project ./03_deploy_control_room.sh
 ```

@@ -19,9 +19,14 @@
 2. Under your stack → Administration → Service accounts, create a service account with
    **Editor** role (needed for the write-back tools: annotations + incidents) and generate
    a token. This is `GRAFANA_SERVICE_ACCOUNT_TOKEN`.
-3. Under your stack → Connections → find the Prometheus remote-write and Loki push
-   endpoints and credentials — these back `GRAFANA_CLOUD_METRICS_USER/TOKEN` and
-   `GRAFANA_CLOUD_LOGS_USER/TOKEN` for the backlot workers.
+3. Under your stack → your stack name → **OpenTelemetry** tile, copy the real OTLP
+   gateway endpoint and generate an access policy token scoped `metrics:write`,
+   `logs:write`, `traces:write`. The tile gives you `OTEL_EXPORTER_OTLP_ENDPOINT`
+   directly and shows how to build `OTEL_EXPORTER_OTLP_HEADERS`
+   (`Authorization=Basic <base64 of instanceID:token>`) — read these from the UI rather
+   than assuming them, the gateway host varies by region/vintage. Both the agent service
+   and the backlot workers push metrics, logs, and traces over this one endpoint (see
+   `agent/second_unit/telemetry.py`, `backlot/worker/render_worker.py`).
 4. Your `GRAFANA_URL` is `https://<your-stack>.grafana.net`.
 
 ## 3. Run the scripts in order
@@ -29,8 +34,7 @@
 ```bash
 PROJECT_ID=... ./00_project_setup.sh
 PROJECT_ID=... GRAFANA_URL=... GRAFANA_SERVICE_ACCOUNT_TOKEN=... \
-  GRAFANA_CLOUD_METRICS_USER=... GRAFANA_CLOUD_METRICS_TOKEN=... \
-  GRAFANA_CLOUD_LOGS_USER=... GRAFANA_CLOUD_LOGS_TOKEN=... ./01_secrets.sh
+  OTEL_EXPORTER_OTLP_ENDPOINT=... OTEL_EXPORTER_OTLP_HEADERS=... ./01_secrets.sh
 PROJECT_ID=... ./02_deploy_agent.sh
 PROJECT_ID=... ./03_deploy_control_room.sh
 ```

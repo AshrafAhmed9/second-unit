@@ -9,13 +9,19 @@ stack. Not a cinematic trailer — the rules require this explicitly.
    "Panthera Spelaea" (CC-BY) — see `backlot/assets/README.md`.
 2. ✅ Real `low_samples`/`break_texture`/`kill_worker`/`clean` batch rendered via
    `backlot/render_eval_conditions.py` — real fur, real fireflies, real broken textures.
-3. ✅ Real eval scorecard committed (`eval/RESULTS.md`) — 100% detection, 0% false positives,
-   8/8 correct, produced by `eval/harness.py` against the real agent.
+3. ✅ Real eval scorecard committed (`eval/RESULTS.md`) — 11 real rendered conditions, 100%
+   detection, 0% false positives, produced by `eval/harness.py` against the real agent.
 4. ✅ Both services live on Cloud Run: `second-unit-agent` and `second-unit-control-room`.
 5. Capture a real run into `agent/demo_mode/recorded_run.json` via
    `agent/scripts/capture_demo_mode.py`, then redeploy the agent service so Demo Mode on the
    hosted URL serves this exact real run.
 6. Have the practitioner quote in hand (see the plan's item A) before scripting the ending.
+7. **Wake the Grafana stack before recording.** Free-tier stacks go idle and show
+   `{"code":"Loading"}` until a human clicks through in the browser
+   (`https://<your-stack>.grafana.net` → click the loading checkbox). If you plan to show
+   Live Mode or the imported dashboard on camera, do this immediately before you hit record —
+   it goes back to sleep from inactivity. Do this again the day judging opens, since the stack
+   will be asleep by then regardless of what's shown in the video.
 
 ## Shot list (target: 2:55, hard cap 3:00)
 

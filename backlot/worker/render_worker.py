@@ -1,7 +1,7 @@
 """THE REAL RENDER FARM WORKER.
 
 Runs headless Blender against a real CC-BY open-movie .blend file and emits
-genuine Prometheus (via pushgateway/remote_write), Loki, and OTLP trace signal
+genuine metrics, logs, and traces to Grafana Cloud over one OTLP gateway
 for every frame it renders — including when a fault `condition` is injected
 that makes the render finish "successfully" while producing a visually broken
 frame. That contradiction (green telemetry, bad picture) is the entire thesis
@@ -25,7 +25,9 @@ Conditions (see backlot/conditions/*.yaml for the full definitions):
 from __future__ import annotations
 
 import argparse
+import logging
 import os
+import resource
 import subprocess
 import sys
 import time
@@ -34,17 +36,42 @@ from pathlib import Path
 from opentelemetry import trace
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "agent"))
-from second_unit.telemetry import configure_tracing  # noqa: E402
+from second_unit.telemetry import configure_tracing, get_log_handler, get_meter  # noqa: E402
 
-tracer = configure_tracing(service_name="second-unit-backlot")
+_SERVICE_NAME = "second-unit-backlot"
+tracer = configure_tracing(service_name=_SERVICE_NAME)
+_meter = get_meter(_SERVICE_NAME)
+
+# Dashboard-facing metric names — must match grafana/dashboards/second-unit-ops-wall.json.
+# Named "cpu", not "gpu": these are headless Blender containers on Cloud Run
+# Jobs with no GPU passthrough, so CPU utilization is the real number to report.
+_cpu_util = _meter.create_gauge(
+    "backlot_worker_cpu_utilization_ratio",
+    description="Container CPU utilization during a frame render (0-1).",
+)
+_render_duration = _meter.create_histogram(
+    "backlot_render_duration_seconds",
+    description="Wall-clock time to render one frame.",
+    unit="s",
+)
+
+_logger = logging.getLogger("second_unit.backlot")
+_log_handler = get_log_handler(_SERVICE_NAME)
+if _log_handler:
+    _logger.addHandler(_log_handler)
+    _logger.setLevel(logging.INFO)
 
 
 def build_blender_command(
-    blend_path: str, frame: int, out_dir: str, condition: str
+    blend_path: str, frame: int, out_dir: str, condition: str, resolution: tuple[int, int] | None = None
 ) -> list[str]:
     """Construct the actual `blender --background ... --render-frame` invocation,
     with the fault condition applied via Blender's Python expression flag so the
     defect is produced by Blender itself, not faked after the fact.
+
+    `resolution` is an optional (width, height) override — used by
+    render_demo_batch.py to keep demo-capture renders fast; omitted, Blender
+    renders at the .blend file's native resolution.
     """
     cmd = [
         "blender",
@@ -56,10 +83,24 @@ def build_blender_command(
         "1",
     ]
 
+    if resolution:
+        w, h = resolution
+        cmd += [
+            "--python-expr",
+            f"import bpy\nbpy.context.scene.render.resolution_x = {w}\nbpy.context.scene.render.resolution_y = {h}\n",
+        ]
+
     if condition == "low_samples":
-        # Real fault: crank Cycles samples down to near-nothing. The render
-        # still succeeds (exit 0) but produces genuine denoiser noise.
-        cmd += ["--python-expr", "import bpy; bpy.context.scene.cycles.samples = 2"]
+        # Real fault: crank Cycles samples down to near-nothing and disable
+        # the denoiser. The render still succeeds (exit 0) but produces
+        # genuine, severe denoiser noise.
+        cmd += [
+            "--python-expr",
+            "import bpy\n"
+            "bpy.context.scene.render.engine = 'CYCLES'\n"
+            "bpy.context.scene.cycles.samples = 1\n"
+            "bpy.context.scene.cycles.use_denoising = False\n",
+        ]
     elif condition == "break_texture":
         cmd += [
             "--python-expr",
@@ -75,9 +116,16 @@ def build_blender_command(
     return cmd
 
 
-def render_frame(blend_path: str, frame: int, out_dir: str, condition: str, job_id: str) -> dict:
+def render_frame(
+    blend_path: str,
+    frame: int,
+    out_dir: str,
+    condition: str,
+    job_id: str,
+    resolution: tuple[int, int] | None = None,
+) -> dict:
     os.makedirs(out_dir, exist_ok=True)
-    cmd = build_blender_command(blend_path, frame, out_dir, condition)
+    cmd = build_blender_command(blend_path, frame, out_dir, condition, resolution=resolution)
 
     with tracer.start_as_current_span("backlot.render_frame") as span:
         span.set_attribute("job_id", job_id)
@@ -85,15 +133,28 @@ def render_frame(blend_path: str, frame: int, out_dir: str, condition: str, job_
         span.set_attribute("condition", condition)
 
         started = time.time()
+        rusage_before = resource.getrusage(resource.RUSAGE_CHILDREN)
         result = subprocess.run(cmd, capture_output=True, text=True, timeout=1800)
         duration_s = time.time() - started
+        rusage_after = resource.getrusage(resource.RUSAGE_CHILDREN)
+
+        # Real CPU utilization: actual child-process CPU seconds consumed
+        # (user + system, from the OS's own accounting) divided by wall time
+        # and core count. Not a synthetic number.
+        cpu_s = (rusage_after.ru_utime - rusage_before.ru_utime) + (
+            rusage_after.ru_stime - rusage_before.ru_stime
+        )
+        cpu_ratio = min(cpu_s / duration_s / os.cpu_count(), 1.0) if duration_s > 0 else 0.0
 
         span.set_attribute("duration_s", duration_s)
         span.set_attribute("exit_code", result.returncode)
+        span.set_attribute("cpu_utilization_ratio", cpu_ratio)
         if result.returncode != 0:
             span.set_attribute("stderr", result.stderr[-4000:])
 
-        emit_metrics(job_id=job_id, frame=frame, duration_s=duration_s, exit_code=result.returncode)
+        emit_metrics(
+            job_id=job_id, frame=frame, duration_s=duration_s, exit_code=result.returncode, cpu_ratio=cpu_ratio
+        )
         emit_logs(job_id=job_id, frame=frame, condition=condition, stderr=result.stderr)
 
         return {
@@ -105,68 +166,29 @@ def render_frame(blend_path: str, frame: int, out_dir: str, condition: str, job_
         }
 
 
-def emit_metrics(job_id: str, frame: int, duration_s: float, exit_code: int) -> None:
-    """Push real render-worker metrics to Grafana Cloud via the Prometheus
-    remote-write endpoint. This is what stays GREEN even on a low_samples
-    render — the job succeeded, so nothing here alerts.
+def emit_metrics(job_id: str, frame: int, duration_s: float, exit_code: int, cpu_ratio: float) -> None:
+    """Record real render-worker metrics via the OTLP metrics pipeline
+    (agent/second_unit/telemetry.py), which Grafana Cloud's OTLP gateway
+    converts into Prometheus series. This is what stays GREEN even on a
+    low_samples render — the job succeeded, so nothing here alerts. Fixes the
+    CRITICAL finding that the old Prometheus remote-write path was dead code
+    (`_encode_remote_write_sample` raised NotImplementedError, so nothing was
+    ever actually pushed).
     """
-    endpoint = os.environ.get("PROMETHEUS_REMOTE_WRITE_URL")
-    if not endpoint:
-        print(f"[metrics:local] job={job_id} frame={frame} duration_s={duration_s:.1f} exit={exit_code}")
-        return
-
-    import requests  # local import: only needed when actually pushing
-
-    # Minimal remote_write client. In production, prefer the OTel Collector's
-    # Prometheus remote-write exporter fed by an OTLP metrics pipeline — this
-    # direct-push path is the fast path for the day-3/day-7 spike.
-    requests.post(
-        endpoint,
-        auth=(os.environ["GRAFANA_CLOUD_METRICS_USER"], os.environ["GRAFANA_CLOUD_METRICS_TOKEN"]),
-        headers={"Content-Type": "application/x-protobuf", "Content-Encoding": "snappy"},
-        data=_encode_remote_write_sample(job_id, frame, duration_s, exit_code),
-        timeout=10,
-    )
+    attrs = {"job_id": job_id, "frame": str(frame), "exit_code": str(exit_code)}
+    _cpu_util.set(cpu_ratio, attrs)
+    _render_duration.record(duration_s, attrs)
+    print(f"[metrics] job={job_id} frame={frame} duration_s={duration_s:.1f} cpu={cpu_ratio:.2f} exit={exit_code}")
 
 
 def emit_logs(job_id: str, frame: int, condition: str, stderr: str) -> None:
-    """Push renderer stderr/stdout to Grafana Cloud Loki so LogsAgent has real
-    log lines to search — including genuine Blender error output when
-    break_texture is active.
+    """Push renderer stderr/stdout to Grafana Cloud Loki (via the OTLP logs
+    pipeline) so LogsAgent has real log lines to search — including genuine
+    Blender error output when break_texture is active.
     """
-    endpoint = os.environ.get("LOKI_PUSH_URL")
-    if not endpoint:
-        if stderr.strip():
-            print(f"[logs:local] job={job_id} frame={frame} condition={condition} stderr={stderr[-500:]}")
-        return
-
-    import requests  # local import
-
-    requests.post(
-        endpoint,
-        auth=(os.environ["GRAFANA_CLOUD_LOGS_USER"], os.environ["GRAFANA_CLOUD_LOGS_TOKEN"]),
-        json={
-            "streams": [
-                {
-                    "stream": {"job": "backlot-worker", "job_id": job_id, "condition": condition},
-                    "values": [[str(int(time.time() * 1e9)), stderr or "render ok"]],
-                }
-            ]
-        },
-        timeout=10,
-    )
-
-
-def _encode_remote_write_sample(job_id: str, frame: int, duration_s: float, exit_code: int) -> bytes:
-    """Placeholder for the real snappy-compressed protobuf WriteRequest.
-    Swap for `prometheus-client` + `remote-write` helper (e.g. `prometheus_remote_writer`)
-    during the day-1/day-3 spike — flagged in the plan as an open item.
-    """
-    raise NotImplementedError(
-        "wire a real Prometheus remote-write encoder here (e.g. the "
-        "`remote-write-exporter` pattern via OTel Collector, or "
-        "`prometheus-remote-writer` package) once Grafana Cloud creds exist"
-    )
+    message = stderr.strip() or "render ok"
+    _logger.info(message, extra={"job_id": job_id, "frame": frame, "condition": condition})
+    print(f"[logs] job={job_id} frame={frame} condition={condition} stderr={stderr[-200:] if stderr.strip() else '(none)'}")
 
 
 def main() -> None:

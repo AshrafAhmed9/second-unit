@@ -7,10 +7,12 @@ from __future__ import annotations
 
 import asyncio
 import json
+import os
 import uuid
 from pathlib import Path
 from typing import AsyncIterator
 
+import httpx
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from google.genai import types
@@ -33,6 +35,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# In-memory by design, not an oversight: the deployed service is pinned to
+# --max-instances 1 (infra/02_deploy_agent.sh) specifically because this dict
+# doesn't survive a second instance — the run and the later approve call
+# would land on different processes and approve would 404. Move to
+# Firestore/Redis before this ever needs real concurrency.
 _pending_plans: dict[str, dict] = {}
 
 
@@ -95,11 +102,49 @@ async def demo_mode() -> dict:
     return json.loads(DEMO_RECORDING_PATH.read_text())
 
 
+async def _grafana_is_asleep() -> bool:
+    """Grafana Cloud free-tier stacks go idle and return
+    {"code":"Loading","message":"Click on the checkbox to continue loading
+    your instance"} until a human wakes them in a browser — verified live
+    against our own stack. A headless MCP tool call against a sleeping stack
+    doesn't fail cleanly; it produces a confusing chain of tool errors deep
+    inside the agent run. Check for this up front so Live Mode can say one
+    clear sentence instead. Fails open (returns False) on any error reaching
+    Grafana at all, since that's a different, unrelated failure mode.
+    """
+    grafana_url = os.environ.get("GRAFANA_URL")
+    if not grafana_url:
+        return False
+    try:
+        async with httpx.AsyncClient(timeout=5) as client:
+            resp = await client.get(f"{grafana_url}/api/health")
+            return resp.status_code == 503 or (resp.status_code == 200 and resp.json().get("code") == "Loading")
+    except Exception:
+        return False
+
+
 @app.post("/runs")
 async def start_run(job_id: str | None = None):
     """Kick off the diagnose half of the graph for a given (or auto-triaged) job,
     streamed back over SSE at /runs/{run_id}/events.
     """
+    if await _grafana_is_asleep():
+        async def asleep_stream() -> AsyncIterator[dict]:
+            yield {
+                "event": "stage",
+                "data": json.dumps(
+                    {
+                        "stage": "system",
+                        "content": (
+                            "Grafana stack is asleep (free-tier stacks idle out and need a human "
+                            "click to wake) — Live Mode can't reach it right now. Demo Mode shows "
+                            "a full recorded real run instead."
+                        ),
+                    }
+                ),
+            }
+        return EventSourceResponse(asleep_stream())
+
     run_id = str(uuid.uuid4())
     await _session_service.create_session(app_name=APP_NAME, user_id="control-room", session_id=run_id)
 

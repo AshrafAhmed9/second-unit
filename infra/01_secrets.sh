@@ -3,16 +3,24 @@
 # Secret Manager, so they never appear in code, images, or logs. Run once
 # per environment, after creating a Grafana Cloud service account with
 # Editor role (Editor is required for the write-back tools — annotations
-# and incidents — see agent/second_unit/tools/grafana_mcp.py).
+# and incidents — see agent/second_unit/tools/grafana_mcp.py) and an access
+# policy token scoped metrics:write, logs:write, traces:write (see
+# agent/second_unit/telemetry.py and backlot/worker/render_worker.py, which
+# both push over this one OTLP gateway instead of the old, dead Prometheus
+# remote-write path).
+#
+# OTEL_EXPORTER_OTLP_ENDPOINT / _HEADERS: read the real values from your
+# stack's OpenTelemetry tile (Grafana Cloud -> your stack -> OpenTelemetry)
+# rather than assuming them — the gateway host varies by region/vintage.
+# OTEL_EXPORTER_OTLP_HEADERS is the literal string
+# "Authorization=Basic <base64 of instanceID:token>".
 set -euo pipefail
 
 : "${PROJECT_ID:?set PROJECT_ID}"
 : "${GRAFANA_URL:?set GRAFANA_URL, e.g. https://yourstack.grafana.net}"
 : "${GRAFANA_SERVICE_ACCOUNT_TOKEN:?set GRAFANA_SERVICE_ACCOUNT_TOKEN}"
-: "${GRAFANA_CLOUD_METRICS_USER:?set GRAFANA_CLOUD_METRICS_USER}"
-: "${GRAFANA_CLOUD_METRICS_TOKEN:?set GRAFANA_CLOUD_METRICS_TOKEN}"
-: "${GRAFANA_CLOUD_LOGS_USER:?set GRAFANA_CLOUD_LOGS_USER}"
-: "${GRAFANA_CLOUD_LOGS_TOKEN:?set GRAFANA_CLOUD_LOGS_TOKEN}"
+: "${OTEL_EXPORTER_OTLP_ENDPOINT:?set OTEL_EXPORTER_OTLP_ENDPOINT, from the OpenTelemetry tile in your stack}"
+: "${OTEL_EXPORTER_OTLP_HEADERS:?set OTEL_EXPORTER_OTLP_HEADERS, e.g. Authorization=Basic <base64 instanceID:token>}"
 
 create_or_update_secret() {
   local name="$1" value="$2"
@@ -25,9 +33,7 @@ create_or_update_secret() {
 
 create_or_update_secret grafana-url "$GRAFANA_URL"
 create_or_update_secret grafana-service-account-token "$GRAFANA_SERVICE_ACCOUNT_TOKEN"
-create_or_update_secret grafana-cloud-metrics-user "$GRAFANA_CLOUD_METRICS_USER"
-create_or_update_secret grafana-cloud-metrics-token "$GRAFANA_CLOUD_METRICS_TOKEN"
-create_or_update_secret grafana-cloud-logs-user "$GRAFANA_CLOUD_LOGS_USER"
-create_or_update_secret grafana-cloud-logs-token "$GRAFANA_CLOUD_LOGS_TOKEN"
+create_or_update_secret otel-exporter-otlp-endpoint "$OTEL_EXPORTER_OTLP_ENDPOINT"
+create_or_update_secret otel-exporter-otlp-headers "$OTEL_EXPORTER_OTLP_HEADERS"
 
 echo "Secrets stored. Next: infra/02_deploy_agent.sh"

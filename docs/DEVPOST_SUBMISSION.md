@@ -84,12 +84,13 @@ Everything below was found by running the thing, not by reasoning about it:
 
 ## Accomplishments that we're proud of
 
-An eval scorecard that is real, regenerable in one command, and reported as-is:
-**100% detection rate across every seeded defect, with 6 defects caught that a
-threshold-alerting baseline would have missed entirely.** The 25% false-positive rate is
-published rather than tuned away, with both cases visually inspected and explained in
-`eval/RESULTS.md` — narrowing a small sample until it hits a round number would undercut the
-exact standard this project holds itself to.
+An eval scorecard that is real and regenerable in one command: 11 real rendered conditions,
+**100% detection rate, 0% false positives, and 6 defects caught that a threshold-alerting
+baseline would have missed entirely.** That 0% isn't the first number we got — an earlier run
+scored 25%, both false positives traced to the verify loop over-reading clean fur as damage,
+fixed and re-run rather than explained away. `eval/RESULTS.md` regenerates from scratch and is
+never hand-edited, so the number on this page can't drift from what the harness actually
+found.
 
 ## What we learned
 

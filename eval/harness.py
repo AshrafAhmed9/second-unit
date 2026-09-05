@@ -111,6 +111,30 @@ def load_real_conditions() -> list[SeededCondition]:
     ]
 
 
+def _find_mcp_toolsets(agent) -> list:
+    """Walk an agent tree and collect every MCPToolset instance so it can be
+    explicitly closed. Each evidence agent's tools=[read_toolset()] spins up
+    its own `mcp-grafana` subprocess (grafana_mcp.py), and nothing in ADK
+    closes it automatically when the agent/session goes out of scope.
+    Building fresh agents per condition (required — see build_evidence_agents'
+    docstring, an ADK agent can only have one parent) without closing these
+    leaked 3 new subprocesses per condition. Across an 11-condition real run
+    that piled up 30+ orphaned subprocesses and eventually hung the harness
+    for hours — found by running the real 11-condition eval after the OTLP
+    telemetry fix and watching it stall with a live TCP connection but zero
+    CPU progress; `ps` on the child processes showed the pile-up.
+    """
+    from google.adk.tools.mcp_tool.mcp_toolset import MCPToolset
+
+    toolsets = []
+    for sub in getattr(agent, "sub_agents", []) or []:
+        toolsets.extend(_find_mcp_toolsets(sub))
+    for tool in getattr(agent, "tools", []) or []:
+        if isinstance(tool, MCPToolset):
+            toolsets.append(tool)
+    return toolsets
+
+
 async def _run_one_condition(condition: SeededCondition) -> DetectionResult:
     """Run the REAL evidence+verify sub-graph (not the full diagnose graph —
     triage/impact/plan/actuator aren't part of the detection question this
@@ -131,32 +155,37 @@ async def _run_one_condition(condition: SeededCondition) -> DetectionResult:
         name="EvalDetect",
         sub_agents=[build_evidence_agents(), build_verify_loop(), build_verdict_agent()],
     )
-    session_service = InMemorySessionService()
-    artifact_service = InMemoryArtifactService()
-    runner = Runner(
-        agent=detect_agent, app_name="second-unit-eval", session_service=session_service, artifact_service=artifact_service
-    )
-    session = await session_service.create_session(
-        app_name="second-unit-eval", user_id="eval", state={"triaged_job_id": condition.condition_id}
-    )
-    message = types.Content(role="user", parts=[types.Part.from_text(text="check this job")])
+    mcp_toolsets = _find_mcp_toolsets(detect_agent)
+    try:
+        session_service = InMemorySessionService()
+        artifact_service = InMemoryArtifactService()
+        runner = Runner(
+            agent=detect_agent, app_name="second-unit-eval", session_service=session_service, artifact_service=artifact_service
+        )
+        session = await session_service.create_session(
+            app_name="second-unit-eval", user_id="eval", state={"triaged_job_id": condition.condition_id}
+        )
+        message = types.Content(role="user", parts=[types.Part.from_text(text="check this job")])
 
-    async for _ in runner.run_async(user_id="eval", session_id=session.id, new_message=message):
-        pass
+        async for _ in runner.run_async(user_id="eval", session_id=session.id, new_message=message):
+            pass
 
-    final = await session_service.get_session(app_name="second-unit-eval", user_id="eval", session_id=session.id)
-    verdict = final.state.get("visual_verdict")
-    if verdict is None:
-        raise RuntimeError(f"VerdictAgent produced no output for {condition.condition_id}")
-    agent_flagged = verdict["has_defect"] if isinstance(verdict, dict) else verdict.has_defect
-    reasoning = verdict["reasoning"] if isinstance(verdict, dict) else verdict.reasoning
-    print(f"    [{condition.condition_id}] has_defect={agent_flagged} | {reasoning}")
+        final = await session_service.get_session(app_name="second-unit-eval", user_id="eval", session_id=session.id)
+        verdict = final.state.get("visual_verdict")
+        if verdict is None:
+            raise RuntimeError(f"VerdictAgent produced no output for {condition.condition_id}")
+        agent_flagged = verdict["has_defect"] if isinstance(verdict, dict) else verdict.has_defect
+        reasoning = verdict["reasoning"] if isinstance(verdict, dict) else verdict.reasoning
+        print(f"    [{condition.condition_id}] has_defect={agent_flagged} | {reasoning}")
 
-    return DetectionResult(
-        condition_id=condition.condition_id,
-        agent_flagged=agent_flagged,
-        baseline_flagged=condition.metrics_would_alert,
-    )
+        return DetectionResult(
+            condition_id=condition.condition_id,
+            agent_flagged=agent_flagged,
+            baseline_flagged=condition.metrics_would_alert,
+        )
+    finally:
+        for toolset in mcp_toolsets:
+            await toolset.close()
 
 
 async def _run_one_condition_with_retry(condition: SeededCondition, max_attempts: int = 4) -> DetectionResult:

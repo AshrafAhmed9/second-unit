@@ -17,3 +17,7 @@ eval/RESULTS.dry-run.md
 *.env.local
 
 .DS_Store
+
+.claude/
+graphify-out/
+CLAUDE.md

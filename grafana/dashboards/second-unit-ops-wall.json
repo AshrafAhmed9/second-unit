@@ -10,12 +10,12 @@
   "panels": [
     {
       "id": 1,
-      "title": "GPU utilization by worker pool",
+      "title": "CPU utilization by worker pool",
       "type": "timeseries",
       "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
       "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
       "targets": [
-        { "expr": "avg by (pool) (backlot_worker_gpu_utilization_ratio)", "legendFormat": "{{pool}}" }
+        { "expr": "avg by (pool) (backlot_worker_cpu_utilization_ratio)", "legendFormat": "{{pool}}" }
       ],
       "description": "This stays GREEN during a low_samples or break_texture condition — the job succeeds normally. That's the whole point: metrics alone cannot see these defects."
     },

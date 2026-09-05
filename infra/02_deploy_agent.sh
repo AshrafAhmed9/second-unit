@@ -21,15 +21,21 @@ done
 
 gcloud builds submit ../agent --tag "gcr.io/${PROJECT_ID}/second-unit-agent:latest"
 
+# --max-instances 1: _pending_plans in server.py is a module-level in-memory
+# dict, not a shared store. With >1 instance the run and the later approve
+# call can land on different instances and the approve 404s. Fix properly
+# (Firestore/Redis) if this ever needs real concurrency; for judging traffic
+# one instance is enough and keeps the approve path honest.
 gcloud run deploy second-unit-agent \
   --image "gcr.io/${PROJECT_ID}/second-unit-agent:latest" \
   --region "$REGION" \
   --service-account "$SERVICE_ACCOUNT" \
   --allow-unauthenticated \
   --min-instances 0 \
-  --max-instances 3 \
+  --max-instances 1 \
+  --timeout 900 \
   --memory 1Gi \
-  --set-secrets "GRAFANA_URL=grafana-url:latest,GRAFANA_SERVICE_ACCOUNT_TOKEN=grafana-service-account-token:latest,GRAFANA_CLOUD_METRICS_USER=grafana-cloud-metrics-user:latest,GRAFANA_CLOUD_METRICS_TOKEN=grafana-cloud-metrics-token:latest,GRAFANA_CLOUD_LOGS_USER=grafana-cloud-logs-user:latest,GRAFANA_CLOUD_LOGS_TOKEN=grafana-cloud-logs-token:latest" \
+  --set-secrets "GRAFANA_URL=grafana-url:latest,GRAFANA_SERVICE_ACCOUNT_TOKEN=grafana-service-account-token:latest,OTEL_EXPORTER_OTLP_ENDPOINT=otel-exporter-otlp-endpoint:latest,OTEL_EXPORTER_OTLP_HEADERS=otel-exporter-otlp-headers:latest" \
   --set-env-vars "GOOGLE_CLOUD_PROJECT=${PROJECT_ID},GOOGLE_GENAI_USE_VERTEXAI=TRUE,GOOGLE_CLOUD_LOCATION=${REGION},BACKLOT_BUCKET=${PROJECT_ID}-backlot"
 
 # BACKLOT_BUCKET is what makes Live Mode work on the deployed service, not
