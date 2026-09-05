@@ -1,38 +1,57 @@
 import type { Stage } from "../types";
 
 const STAGE_LABELS: Record<string, string> = {
-  TriageAgent: "1 · Triage",
-  MetricsAgent: "2 · Metrics (Prometheus)",
-  LogsAgent: "2 · Logs (Loki)",
-  TraceAgent: "2 · Traces (Tempo)",
-  EyesAgent: "2 · Vision — checking the picture",
-  SkepticAgent: "3 · Verify — skeptic",
-  ReexamineAgent: "3 · Verify — re-examine",
-  ImpactAgent: "4 · Impact — deadline & cost",
-  PlannerAgent: "5 · Plan",
-  ActuatorAgent: "7 · Write-back to Grafana",
+  TriageAgent: "Triage",
+  MetricsAgent: "Metrics (Prometheus)",
+  LogsAgent: "Logs (Loki)",
+  TraceAgent: "Traces (Tempo)",
+  EyesAgent: "Vision — checking the picture",
+  SkepticAgent: "Verify — skeptic",
+  ReexamineAgent: "Verify — re-examine",
+  VerdictAgent: "Verdict",
+  ImpactAgent: "Impact — deadline & cost",
+  PlannerAgent: "Plan",
+  ActuatorAgent: "Write-back to Grafana",
 };
+
+// The one place a real broken frame belongs inline with the agent trail —
+// EyesAgent's own words are what flagged it, so the picture sits right
+// under them, not off in a separate gallery the reader has to go find.
+const FLAGGED_FRAME_SRC = "/frames/job-seq042-sh0420__frame_0185.png";
 
 export function AgentStageList({ stages }: { stages: Stage[] }) {
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-      {stages.map((s, i) => (
-        <div
-          key={i}
-          style={{
-            padding: "10px 14px",
-            borderRadius: 6,
-            background: "#12151a",
-            border: "1px solid #2a2f37",
-            borderLeft: s.stage === "EyesAgent" ? "3px solid #f4b942" : "3px solid #2a2f37",
-          }}
-        >
-          <div style={{ fontSize: 11, color: "#9aa4b2", textTransform: "uppercase", letterSpacing: 0.5 }}>
-            {STAGE_LABELS[s.stage] ?? s.stage}
+    <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-2)" }}>
+      {stages.map((s, i) => {
+        const flagged = s.stage === "EyesAgent";
+        return (
+          <div
+            key={i}
+            style={{
+              padding: "var(--space-3)",
+              borderRadius: "var(--radius)",
+              background: flagged ? "#1a160e" : "var(--bg-raised)",
+              border: `1px solid ${flagged ? "var(--border-amber)" : "var(--border)"}`,
+            }}
+          >
+            <div style={{ fontSize: 13, fontWeight: 600, color: flagged ? "var(--amber)" : "var(--text-dim)", marginBottom: 4 }}>
+              {STAGE_LABELS[s.stage] ?? s.stage}
+            </div>
+            <div style={{ fontSize: 14, color: "#ced3da", whiteSpace: "pre-wrap" }}>{s.content}</div>
+            {flagged && (
+              <div style={{ marginTop: "var(--space-2)", maxWidth: 240, borderRadius: 6, overflow: "hidden", border: "1px solid var(--border-amber)" }}>
+                <img
+                  src={FLAGGED_FRAME_SRC}
+                  alt="The real defective frame EyesAgent flagged, obscured by dense denoiser noise"
+                  width={240}
+                  height={135}
+                  style={{ width: "100%", display: "block", imageRendering: "pixelated" }}
+                />
+              </div>
+            )}
           </div>
-          <div style={{ fontSize: 14, marginTop: 4, whiteSpace: "pre-wrap" }}>{s.content}</div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }

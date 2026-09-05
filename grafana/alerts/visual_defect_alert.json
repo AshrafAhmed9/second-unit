@@ -1,0 +1,48 @@
+{
+  "title": "SECOND UNIT: visual defect detected",
+  "ruleGroup": "second-unit-vision",
+  "folderUID": "REPLACE_WITH_YOUR_FOLDER_UID",
+  "orgID": 1,
+  "condition": "C",
+  "noDataState": "OK",
+  "execErrState": "Error",
+  "for": "0s",
+  "annotations": {
+    "summary": "Vision agent flagged a rendered frame as defective, even though the job's own metrics/logs reported healthy — see the annotation SECOND UNIT wrote back and the agent's reasoning traces in Tempo."
+  },
+  "labels": {
+    "source": "second-unit-vision-agent"
+  },
+  "data": [
+    {
+      "refId": "A",
+      "relativeTimeRange": { "from": 300, "to": 0 },
+      "datasourceUid": "REPLACE_WITH_YOUR_PROMETHEUS_DS_UID",
+      "model": {
+        "editorMode": "code",
+        "expr": "increase(second_unit_visual_defects_detected_total[5m])",
+        "instant": false,
+        "range": true,
+        "refId": "A"
+      }
+    },
+    {
+      "refId": "C",
+      "relativeTimeRange": { "from": 300, "to": 0 },
+      "datasourceUid": "__expr__",
+      "model": {
+        "conditions": [
+          {
+            "evaluator": { "params": [0], "type": "gt" },
+            "operator": { "type": "and" },
+            "query": { "params": ["A"] },
+            "reducer": { "type": "sum" },
+            "type": "query"
+          }
+        ],
+        "refId": "C",
+        "type": "classic_conditions"
+      }
+    }
+  ]
+}

@@ -1,0 +1,77 @@
+:root {
+  --bg: #0b0d10;
+  --bg-raised: #14171c;
+  --border: #262b33;
+  --border-amber: #6b5322;
+  --border-green: #2f6b3a;
+  --border-red: #6b2f2f;
+  --text: #e7e9ec;
+  --text-dim: #9aa4b2;
+  --text-faint: #5f6773;
+  --amber: #f4b942;
+  --green: #7fd99a;
+  --red: #e5786a;
+  --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Helvetica, Arial, sans-serif;
+  --mono: "SF Mono", ui-monospace, Menlo, monospace;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 16px;
+  --space-4: 24px;
+  --space-5: 40px;
+  --space-6: 64px;
+  --radius: 8px;
+  --radius-lg: 10px;
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: inherit;
+}
+
+button {
+  font-family: var(--font);
+}
+
+button:focus-visible,
+a:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: 2px;
+}
+
+img {
+  max-width: 100%;
+}
+
+@media (max-width: 900px) {
+  .main-grid,
+  .contradiction-grid,
+  .proof-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

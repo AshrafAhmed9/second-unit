@@ -1,0 +1,18 @@
+[
+  {
+    "condition_id": "eval-clean-000",
+    "label": "clean",
+    "frame": "eval-clean-000__frame_0001.png",
+    "has_defect": false,
+    "reasoning": "The visual evidence explicitly states that the frame 'looks clean' and that it does not contain 'any visual defects; no fireflies, missing textures, or corrupted geometry.'",
+    "visual_evidence": "frame_0001.png looks clean. This is a close-up of a feline, possibly a lioness, looking off to the left. The fur and eye textures are sharp and detailed. I do not see any visual defects; no fireflies, missing textures, or corrupted geometry."
+  },
+  {
+    "condition_id": "eval-low_samples-003",
+    "label": "defective",
+    "frame": "eval-low_samples-003__frame_0001.png",
+    "has_defect": true,
+    "reasoning": "The visual finding explicitly states 'extreme denoiser noise' and that the 'entire frame is covered in multi-colored pixels, obscuring the underlying image', which clearly describes a visual defect.",
+    "visual_evidence": "frame_0001.png has extreme denoiser noise, to the point that it's difficult to recognize the subject of the image. The entire frame is covered in multi-colored pixels, obscuring the underlying image."
+  }
+]

@@ -3,6 +3,7 @@ from second_unit.sub_agents.evidence import evidence_agents
 from second_unit.sub_agents.impact import impact_agent
 from second_unit.sub_agents.planner import planner_agent
 from second_unit.sub_agents.triage import triage_agent
+from second_unit.sub_agents.verdict import verdict_agent
 from second_unit.sub_agents.verify import verify_loop
 
 __all__ = [
@@ -11,5 +12,6 @@ __all__ = [
     "impact_agent",
     "planner_agent",
     "triage_agent",
+    "verdict_agent",
     "verify_loop",
 ]

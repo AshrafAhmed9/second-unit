@@ -82,24 +82,15 @@ def get_log_handler(service_name: str = "second-unit-agent") -> LoggingHandler |
 # real caller (agent/second_unit/agent.py, render_worker.py) now calls
 # configure_tracing(service_name=...) explicitly and is the first (only)
 # caller in its own process.
-
-
-def traced_stage(stage_name: str):
-    """Decorator: wrap an agent stage function so its reasoning appears as a
-    span in Tempo, labeled by stage (triage, evidence, verify, impact, ...).
-    """
-
-    def decorator(fn):
-        def wrapper(*args, **kwargs):
-            with tracer.start_as_current_span(f"second_unit.{stage_name}") as span:
-                result = fn(*args, **kwargs)
-                # Agents attach human-readable reasoning as a span attribute so
-                # it's visible directly in the Tempo trace view, not just in logs.
-                reasoning = getattr(result, "reasoning", None)
-                if reasoning:
-                    span.set_attribute("second_unit.reasoning", str(reasoning)[:2000])
-                return result
-
-        return wrapper
-
-    return decorator
+#
+# No custom per-stage span decorator here. Once the global tracer provider
+# above is set, google-adk's own instrumentation (google/adk/telemetry/
+# tracing.py) already emits a full span tree for every run — invoke_agent
+# <name> per sub-agent, call_llm/generate_content per model call, and
+# execute_tool per tool call — with the model's actual response text
+# attached as a span attribute (gen_ai semconv, content capture on by
+# default). Verified live: a real POST /runs against the deployed agent
+# produced a 35-span trace in Tempo including "invoke_agent EyesAgent" and
+# "invoke_agent MetricsAgent" nodes with real reasoning text on them.
+# A hand-rolled traced_stage() decorator here would just be reimplementing,
+# worse, telemetry the framework already provides for free.

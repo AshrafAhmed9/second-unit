@@ -10,12 +10,12 @@
   "panels": [
     {
       "id": 1,
-      "title": "CPU utilization by worker pool",
+      "title": "CPU utilization by job",
       "type": "timeseries",
       "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
       "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
       "targets": [
-        { "expr": "avg by (pool) (backlot_worker_cpu_utilization_ratio)", "legendFormat": "{{pool}}" }
+        { "expr": "avg by (job_id) (backlot_worker_cpu_utilization_ratio)", "legendFormat": "{{job_id}}" }
       ],
       "description": "This stays GREEN during a low_samples or break_texture condition — the job succeeds normally. That's the whole point: metrics alone cannot see these defects."
     },
@@ -36,7 +36,8 @@
       "type": "logs",
       "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
       "datasource": { "type": "loki", "uid": "${DS_LOKI}" },
-      "targets": [{ "expr": "{job=\"backlot-worker\"}" }]
+      "targets": [{ "expr": "{service_name=\"second-unit-backlot\"}" }],
+      "description": "OTLP logs are labeled service_name, not job — matches the resource attribute render_worker.py sets in telemetry.py, not the old (unused) Promtail-style job label this panel originally queried."
     },
     {
       "id": 4,
@@ -50,9 +51,24 @@
       "id": 5,
       "title": "Agent reasoning traces (Tempo)",
       "type": "traces",
-      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 16 },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 },
       "datasource": { "type": "tempo", "uid": "${DS_TEMPO}" },
-      "description": "second_unit.* spans — the agent graph's own execution, exported via OTel so it's debuggable the same way any other farm service is."
+      "targets": [
+        { "queryType": "traceql", "query": "{resource.service.name=\"second-unit-agent\"}", "limit": 20 }
+      ],
+      "description": "google-adk auto-instruments every sub-agent (invoke_agent <name>), model call (call_llm/generate_content), and tool call (execute_tool) as a real span with the model's actual response text attached — so this is the agent's own reasoning, in Tempo, debuggable the same way any other farm service is. No custom instrumentation needed: this is ADK's built-in OpenTelemetry support, verified live against this stack."
+    },
+    {
+      "id": 6,
+      "title": "Visual defects detected (vision agent verdicts)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 16 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "targets": [
+        { "expr": "sum(increase(second_unit_visual_defects_detected_total[$__range]))", "legendFormat": "defects flagged" },
+        { "expr": "sum(increase(second_unit_frames_inspected_total[$__range]))", "legendFormat": "jobs inspected" }
+      ],
+      "description": "The payoff of the whole vision-agent idea as a normal Prometheus series: a failure class that CPU/duration/log monitoring structurally cannot see, now a metric you can alert on (see grafana/alerts/) instead of prose in a chat transcript. Emitted by VerdictAgent's after_agent_callback (agent/second_unit/sub_agents/verdict.py) on every diagnose run, live or eval."
     }
   ],
   "templating": {

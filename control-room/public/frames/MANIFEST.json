@@ -1,0 +1,26 @@
+[
+  {
+    "job_id": "job-seq042-sh0420",
+    "source_condition": "low_samples",
+    "source_path": "backlot/frames_local/job-seq042-sh0420/frame_0185.png",
+    "public_path": "/frames/job-seq042-sh0420__frame_0185.png",
+    "sha256": "ffe4408104cfc5a62c594e774194d1a9a84f9c2a7192cf8295d53183b4f16bb8",
+    "note": "The frame EyesAgent's recorded finding names verbatim \u2014 denoiser fireflies, job exits 0, metrics stay green."
+  },
+  {
+    "job_id": "eval-clean-000",
+    "source_condition": "clean",
+    "source_path": "backlot/frames_local/eval-clean-000/frame_0001.png",
+    "public_path": "/frames/eval-clean-000__frame_0001.png",
+    "sha256": "e7e77955521bda9ac929be99de818289725e21b155d0b8be819719a50606fd16",
+    "note": "Same pipeline, a genuinely clean render, for the VisionProof side-by-side."
+  },
+  {
+    "job_id": "eval-low_samples-003",
+    "source_condition": "low_samples",
+    "source_path": "backlot/frames_local/eval-low_samples-003/frame_0001.png",
+    "public_path": "/frames/eval-low_samples-003__frame_0001.png",
+    "sha256": "9f10a1adf8b59feda3c8fbd9b57e5a16272c2a53fe0e06b8acbf13fed9f2d21c",
+    "note": "A second real defective render, distinct from job-seq042-sh0420, for the VisionProof side-by-side."
+  }
+]

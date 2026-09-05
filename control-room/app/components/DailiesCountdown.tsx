@@ -29,17 +29,17 @@ export function DailiesCountdown({ dueAt }: { dueAt: string }) {
 
   return (
     <div
+      role="status"
+      aria-live="polite"
       style={{
-        padding: "12px 20px",
-        borderRadius: 8,
-        background: late ? "#3a1414" : "#12151a",
-        border: `1px solid ${late ? "#8a2f2f" : "#2a2f37"}`,
+        padding: "var(--space-3)",
+        borderRadius: "var(--radius)",
+        background: late ? "#2a1414" : "var(--bg-raised)",
+        border: `1px solid ${late ? "var(--border-red)" : "var(--border)"}`,
       }}
     >
-      <div style={{ fontSize: 12, color: "#9aa4b2", textTransform: "uppercase", letterSpacing: 1 }}>
-        Next dailies screening
-      </div>
-      <div style={{ fontSize: 28, fontWeight: 700, color: late ? "#ff6b6b" : "#e7e9ec", fontVariantNumeric: "tabular-nums" }}>
+      <div style={{ fontSize: 13, color: "var(--text-dim)" }}>Next dailies screening</div>
+      <div style={{ fontSize: 28, fontWeight: 650, color: late ? "var(--red)" : "var(--text)", fontVariantNumeric: "tabular-nums" }}>
         {remaining || "--"}
       </div>
     </div>

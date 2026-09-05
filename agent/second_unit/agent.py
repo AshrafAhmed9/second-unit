@@ -7,12 +7,13 @@ server.py for how these two halves are invoked with the approval boundary
 between them.
 
     SequentialAgent "diagnose"          [HUMAN APPROVAL GATE]   SequentialAgent "act"
-    1. TriageAgent                              (server.py)      7. ActuatorAgent
+    1. TriageAgent                              (server.py)      8. ActuatorAgent
     2. ParallelAgent "evidence"          ---------------------->
        (metrics, logs, traces, eyes)
     3. LoopAgent "verify"
-    4. ImpactAgent
-    5. PlannerAgent
+    4. VerdictAgent
+    5. ImpactAgent
+    6. PlannerAgent
 """
 from google.adk.agents import SequentialAgent
 
@@ -22,6 +23,7 @@ from second_unit.sub_agents import (
     impact_agent,
     planner_agent,
     triage_agent,
+    verdict_agent,
     verify_loop,
 )
 from second_unit.telemetry import configure_tracing
@@ -30,7 +32,13 @@ configure_tracing()
 
 diagnose_agent = SequentialAgent(
     name="SecondUnitDiagnose",
-    sub_agents=[triage_agent, evidence_agents, verify_loop, impact_agent, planner_agent],
+    # VerdictAgent runs after verify (not just in eval/harness.py) so every
+    # live/demo run also emits the second_unit_frames_inspected_total /
+    # second_unit_visual_defects_detected_total metrics from its
+    # after_agent_callback — the eval path and the live path now use the
+    # same structured classifier instead of two different notions of
+    # "defective".
+    sub_agents=[triage_agent, evidence_agents, verify_loop, verdict_agent, impact_agent, planner_agent],
 )
 
 act_agent = SequentialAgent(

@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SECOND UNIT — design comp</title>
+<style>
+  :root {
+    --bg: #0b0d10;
+    --bg-raised: #14171c;
+    --border: #262b33;
+    --text: #e7e9ec;
+    --text-dim: #9aa4b2;
+    --text-faint: #5f6773;
+    --amber: #f4b942;
+    --amber-dim: #6b5322;
+    --green: #7fd99a;
+    --red: #e5786a;
+    --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Helvetica, Arial, sans-serif;
+    --mono: "SF Mono", ui-monospace, Menlo, monospace;
+    --space-1: 4px;
+    --space-2: 8px;
+    --space-3: 16px;
+    --space-4: 24px;
+    --space-5: 40px;
+    --space-6: 64px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font);
+    line-height: 1.5;
+  }
+  .comp-note {
+    background: #1a2230;
+    border-bottom: 1px solid #2b3a52;
+    color: #a9c1e0;
+    font-size: 13px;
+    padding: 10px 24px;
+    text-align: center;
+  }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: var(--space-5) var(--space-4) var(--space-6); }
+
+  /* ---- header ---- */
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: var(--space-5);
+    gap: var(--space-4);
+    flex-wrap: wrap;
+  }
+  .wordmark { font-size: 15px; font-weight: 700; letter-spacing: 0.02em; color: var(--text); }
+  .wordmark span { color: var(--text-faint); font-weight: 400; }
+  .mode-toggle { display: flex; gap: 2px; background: var(--bg-raised); border: 1px solid var(--border); border-radius: 8px; padding: 2px; }
+  .mode-toggle button {
+    font-family: var(--font); font-size: 13px; padding: 6px 14px; border-radius: 6px; border: none;
+    background: transparent; color: var(--text-dim); cursor: pointer;
+  }
+  .mode-toggle button[aria-pressed="true"] { background: #1f2530; color: var(--text); }
+
+  /* ---- opening statement ---- */
+  .thesis {
+    font-size: 34px;
+    font-weight: 650;
+    letter-spacing: -0.015em;
+    line-height: 1.15;
+    max-width: 760px;
+    margin: 0 0 var(--space-5);
+  }
+  .thesis em { font-style: normal; color: var(--amber); }
+
+  /* ---- the contradiction: primary visual ---- */
+  .contradiction {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-3);
+    margin-bottom: var(--space-5);
+  }
+  .contra-panel { border-radius: 10px; overflow: hidden; border: 1px solid var(--border); }
+  .contra-panel .label {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: var(--space-3) var(--space-3) var(--space-2);
+    font-size: 13px; color: var(--text-dim);
+  }
+  .contra-panel .label .status { font-weight: 600; }
+  .status.green { color: var(--green); }
+  .status.amber { color: var(--amber); }
+  .metric-face {
+    padding: var(--space-4) var(--space-3) var(--space-3);
+    background: var(--bg-raised);
+  }
+  .metric-face .big { font-size: 40px; font-weight: 650; font-variant-numeric: tabular-nums; }
+  .metric-face .sub { font-size: 13px; color: var(--text-dim); margin-top: var(--space-1); }
+  .sparkline { height: 48px; margin-top: var(--space-3); display: flex; align-items: flex-end; gap: 3px; }
+  .sparkline i { flex: 1; background: var(--green); opacity: 0.55; border-radius: 1px; }
+  .frame-face { position: relative; background: #000; aspect-ratio: 16/9; }
+  .frame-face img { width: 100%; height: 100%; object-fit: cover; image-rendering: pixelated; display: block; }
+  .frame-face .caption {
+    position: absolute; left: 0; right: 0; bottom: 0;
+    padding: var(--space-2) var(--space-3);
+    background: linear-gradient(transparent, rgba(0,0,0,0.75));
+    font-size: 12px; color: #d8dce2; font-family: var(--mono);
+  }
+
+  /* ---- main grid: stages + side rail ---- */
+  .main-grid { display: grid; grid-template-columns: 1.6fr 1fr; gap: var(--space-4); align-items: start; }
+  @media (max-width: 900px) { .main-grid, .contradiction { grid-template-columns: 1fr; } }
+
+  .stage-heading { font-size: 13px; color: var(--text-dim); margin: 0 0 var(--space-3); }
+  .stages { display: flex; flex-direction: column; gap: var(--space-2); }
+  .stage {
+    padding: var(--space-3);
+    border-radius: 8px;
+    background: var(--bg-raised);
+    border: 1px solid var(--border);
+  }
+  .stage.flagged { border-color: var(--amber-dim); background: #1a160e; }
+  .stage .who { font-size: 13px; font-weight: 600; color: var(--text-dim); margin-bottom: var(--space-1); }
+  .stage.flagged .who { color: var(--amber); }
+  .stage .body { font-size: 14px; color: #ced3da; }
+  .stage .thumb { margin-top: var(--space-2); border-radius: 6px; overflow: hidden; border: 1px solid var(--amber-dim); max-width: 240px; }
+  .stage .thumb img { width: 100%; display: block; image-rendering: pixelated; }
+
+  .rail { display: flex; flex-direction: column; gap: var(--space-3); }
+  .card { padding: var(--space-3); border-radius: 8px; background: var(--bg-raised); border: 1px solid var(--border); }
+  .card h3 { font-size: 13px; color: var(--text-dim); margin: 0 0 var(--space-2); font-weight: 500; }
+  .card .headline { font-size: 15px; }
+  .countdown { font-size: 28px; font-weight: 650; font-variant-numeric: tabular-nums; }
+  .countdown .unit { font-size: 13px; color: var(--text-dim); font-weight: 400; margin-left: 4px; }
+
+  .scorecard .hero { font-size: 30px; font-weight: 650; color: var(--amber); }
+  .scorecard .hero-label { font-size: 13px; color: var(--text-dim); margin-top: 2px; }
+  .scorecard .rows { margin-top: var(--space-3); display: flex; flex-direction: column; gap: var(--space-2); border-top: 1px solid var(--border); padding-top: var(--space-3); }
+  .scorecard .row { display: flex; justify-content: space-between; font-size: 13px; color: var(--text-dim); }
+  .scorecard .row b { color: var(--text); font-weight: 600; }
+
+  .approve-btn {
+    width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #2f6b3a;
+    background: #16321c; color: #b9f2c3; font-size: 14px; font-weight: 600; cursor: pointer;
+    font-family: var(--font);
+  }
+  .approve-btn:hover { background: #1a3a21; }
+  .approve-btn:focus-visible { outline: 2px solid var(--green); outline-offset: 2px; }
+
+  /* ---- vision proof section ---- */
+  .proof { margin-top: var(--space-6); }
+  .proof h2 { font-size: 20px; font-weight: 650; margin: 0 0 var(--space-1); }
+  .proof p.sub { color: var(--text-dim); font-size: 14px; margin: 0 0 var(--space-3); }
+  .proof-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); }
+  @media (max-width: 700px) { .proof-grid { grid-template-columns: 1fr; } }
+  .proof-panel { border-radius: 10px; overflow: hidden; border: 1px solid var(--border); }
+  .proof-panel img { width: 100%; display: block; aspect-ratio: 16/9; object-fit: cover; image-rendering: pixelated; }
+  .proof-panel .verdict { padding: var(--space-3); background: var(--bg-raised); }
+  .proof-panel .verdict .tag { font-size: 12px; font-family: var(--mono); }
+  .proof-panel .verdict .tag.clean { color: var(--green); }
+  .proof-panel .verdict .tag.defect { color: var(--red); }
+  .proof-panel .verdict p { font-size: 13px; color: var(--text-dim); margin: var(--space-1) 0 0; }
+
+  footer { margin-top: var(--space-6); padding-top: var(--space-4); border-top: 1px solid var(--border); font-size: 12px; color: var(--text-faint); }
+</style>
+</head>
+<body>
+
+<div class="comp-note">
+  DESIGN COMP — static reference only, not the implementation. desktop shown above ~900px, single-column below.
+  Real frame images are the two real renders from control-room/public/frames/.
+</div>
+
+<div class="wrap">
+
+  <header>
+    <div class="wordmark">SECOND UNIT <span>· render farm ops</span></div>
+    <div class="mode-toggle" role="group" aria-label="Mode">
+      <button aria-pressed="true">Demo</button>
+      <button aria-pressed="false">Live</button>
+    </div>
+  </header>
+
+  <h1 class="thesis">Every metric on this job says <em>fine</em>. The frame it produced doesn't.</h1>
+
+  <section class="contradiction" aria-label="The contradiction">
+    <div class="contra-panel">
+      <div class="label"><span>Grafana · job-seq042-sh0420</span><span class="status green">● green</span></div>
+      <div class="metric-face">
+        <div class="big">58%</div>
+        <div class="sub">CPU utilization, worker pool — 30m window, no alerts firing</div>
+        <div class="sparkline">
+          <i style="height:40%"></i><i style="height:55%"></i><i style="height:48%"></i><i style="height:62%"></i>
+          <i style="height:50%"></i><i style="height:58%"></i><i style="height:45%"></i><i style="height:60%"></i>
+          <i style="height:52%"></i><i style="height:58%"></i><i style="height:47%"></i><i style="height:63%"></i>
+        </div>
+      </div>
+    </div>
+    <div class="contra-panel">
+      <div class="label"><span>frame_0185.png</span><span class="status amber">● flagged</span></div>
+      <div class="frame-face">
+        <img src="../public/frames/job-seq042-sh0420__frame_0185.png" alt="Rendered frame 0185, obscured by dense multicolored denoiser noise across the panther's fur">
+        <div class="caption">EyesAgent: "critically corrupted — denoiser fireflies, subject obscured"</div>
+      </div>
+    </div>
+  </section>
+
+  <div class="main-grid">
+    <div>
+      <h2 class="stage-heading">Agent crew</h2>
+      <div class="stages">
+        <div class="stage">
+          <div class="who">Triage</div>
+          <div class="body">job-seq042-sh0420 — closest to due, backs a client review, 12 frames remaining</div>
+        </div>
+        <div class="stage">
+          <div class="who">Logs · Metrics · Traces</div>
+          <div class="body">All three report clean: no retry storms, CPU 48–67%, 20 render spans, none orphaned.</div>
+        </div>
+        <div class="stage flagged">
+          <div class="who">Vision</div>
+          <div class="body">Frames 185–192 are critically corrupted — dense multicolored noise obscures the subject entirely.</div>
+          <div class="thumb"><img src="../public/frames/job-seq042-sh0420__frame_0185.png" alt="Thumbnail of the flagged defective frame"></div>
+        </div>
+        <div class="stage">
+          <div class="who">Skeptic</div>
+          <div class="body">CONFIRMED — specific, frame-named, well-supported. No re-examination needed.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="rail">
+      <div class="card">
+        <h3>Next dailies screening</h3>
+        <div class="countdown">2<span class="unit">h</span> 14<span class="unit">m</span></div>
+      </div>
+      <div class="card">
+        <h3>Impact</h3>
+        <div class="headline">8 frames must be re-rendered — finish slips past the client-review deadline. $2 re-render now vs. $142 overtime tomorrow.</div>
+      </div>
+      <div class="card scorecard">
+        <div class="hero">6</div>
+        <div class="hero-label">defects the metrics-only baseline missed entirely</div>
+        <div class="rows">
+          <div class="row"><span>Detection rate</span><b>100%</b></div>
+          <div class="row"><span>False positive rate</span><b>0%</b></div>
+          <div class="row"><span>Real rendered conditions</span><b>11</b></div>
+        </div>
+      </div>
+      <button class="approve-btn">Approve → write to Grafana</button>
+    </div>
+  </div>
+
+  <section class="proof">
+    <h2>Same agent, different input</h2>
+    <p class="sub">Two real renders, run through the identical pipeline.</p>
+    <div class="proof-grid">
+      <div class="proof-panel">
+        <img src="../public/frames/eval-clean-000__frame_0001.png" alt="A genuinely clean render, sharp fur detail, no artifacts">
+        <div class="verdict">
+          <div class="tag clean">has_defect: false</div>
+          <p>"No evidence of visual defects — exceptionally clean, genuinely correct render."</p>
+        </div>
+      </div>
+      <div class="proof-panel">
+        <img src="../public/frames/eval-low_samples-003__frame_0001.png" alt="A defective render with severe denoiser fireflies covering the frame">
+        <div class="verdict">
+          <div class="tag defect">has_defect: true</div>
+          <p>"Severe denoiser fireflies — multi-colored pixel noise obscuring the subject."</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    Gemini · Google ADK · Cloud Run · Grafana Cloud MCP (read + write) · Apache-2.0
+  </footer>
+
+</div>
+</body>
+</html>
