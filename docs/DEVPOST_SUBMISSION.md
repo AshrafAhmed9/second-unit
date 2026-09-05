@@ -48,9 +48,13 @@ annotation on the team's own panels.
   account.
 - **Grafana (partner)**: The official `grafana/mcp-grafana` server, called at runtime, in
   **both directions** — reading metrics/logs/traces (33 tools live, including proxied Tempo)
-  and writing annotations back. The agent graph also exports its own reasoning as
-  OpenTelemetry traces into Grafana Tempo, so you can debug the AI inside the same tool you
-  use to debug the farm.
+  and writing annotations back. The agent graph's own reasoning is auto-instrumented into
+  Grafana Tempo by `google-adk` itself (verified live: a single diagnose run produces a
+  35-span trace, including each sub-agent's actual output text), so you can debug the AI
+  inside the same tool you use to debug the farm. The vision agent's verdict is also emitted
+  as a real Prometheus counter (`second_unit_visual_defects_detected_total`) with a
+  provisioned Grafana alert rule on it — the failure class that observability structurally
+  cannot see becomes something you can page on, not just a chat transcript.
 - **THE BACKLOT**: a real render farm, not a simulator. Headless Blender rendering real
   frames from Blender's official CC-BY 5.2 splash asset, with faults induced through real
   render conditions — sample count forced to 1, textures genuinely unpacked and repointed to
